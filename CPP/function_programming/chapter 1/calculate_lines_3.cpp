@@ -10,7 +10,7 @@ using namespace std;
  * An functional way
 */
 
-int count_lines(const string& filename) {
+int countLines(const string& filename) {
   ifstream in(filename);
 
   return count(istreambuf_iterator<char>(in),
@@ -18,10 +18,10 @@ int count_lines(const string& filename) {
                '\n');
 }
 
-vector<int> count_lines_in_files(const vector<string>& files) {
+vector<int> countLinesInFiles(const vector<string>& files) {
   vector<int> results(files.size());
 
-  transform(files.begin(), files.end(), results.begin(), count_lines);
+  transform(files.begin(), files.end(), results.begin(), countLines);
 
   return results;
 }
