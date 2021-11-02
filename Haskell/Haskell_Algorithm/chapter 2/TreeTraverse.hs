@@ -1,4 +1,6 @@
-import TreeStructure
+module TreeTraverse where
+
+import TreeStructure ( BinaryTree(..) )
 
 -- preOrder
 preOrder :: BinaryTree a -> [a]

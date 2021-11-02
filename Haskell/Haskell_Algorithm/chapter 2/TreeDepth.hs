@@ -1,4 +1,5 @@
-import TreeStructure
+module TreeDepth where
+import TreeStructure ( BinaryTree(..), Tree(..) )
 
 {-
   Calculate the depth of Tree and BinaryTree.
