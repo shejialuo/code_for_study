@@ -36,18 +36,18 @@ The formal definition says that a finite automaton is a list of those
 five objects: set of states, input alphabet, rules for moving, start
 state and a set of accept states.
 
-A *finite automaton* is a 5-tuple $(Q,\sum, \delta, q_{0}, F)$, where
+A *finite automaton* is a 5-tuple $(Q,\Sigma, \delta, q_{0}, F)$, where
 
 + $Q$ is a finite set called the *states*.
-+ $\sum$ is a finite set called the *alphabet*.
-+ $\delta: (Q \times \sum) \to Q$ is the *transition function*.
++ $\Sigma$ is a finite set called the *alphabet*.
++ $\delta: (Q \times \Sigma) \to Q$ is the *transition function*.
 + $q_{0} \in Q$ is the *start state*.
 + $F \subseteq Q$ is the *set of accept states*.
 
-Now we can mathematically describe $M_{1} = (Q,\sum, \delta, q_{0}, F)$, where
+Now we can mathematically describe $M_{1} = (Q,\Sigma, \delta, q_{0}, F)$, where
 
 + $Q = \{q_{1}, q_{2}, q_{3}\}$
-+ $\sum = \{0,1\}$
++ $\Sigma = \{0,1\}$
 + $\delta$ just can be computed
 + $q_{1}$ is the start state
 + $F = \{q_{2}\}$
@@ -66,8 +66,8 @@ to specify the machine.
 
 ### 1.3 Formal Definition of Computation
 
-Let $M = (Q,\sum, \delta, q_{0}, F)$ be a finite automaton and let $w = w_{1}w_{2}\cdots w_{n}$
-be a string where each $w_{i}$ is a member of the alphabet $\sum$. Then $M$ accepts $w$
+Let $M = (Q,\Sigma, \delta, q_{0}, F)$ be a finite automaton and let $w = w_{1}w_{2}\cdots w_{n}$
+be a string where each $w_{i}$ is a member of the alphabet $\Sigma$. Then $M$ accepts $w$
 if a sequence of states $r_{0},r_{1},\dots,r_{n}$ in $Q$ exists with three conditions:
 
 + $r_{0} = q_{0}$
@@ -104,18 +104,18 @@ if $A_{1}$ and $A_{2}$ are regular languages, so is $A_{1} \cup A_{2}$.
 
 Let
 
-+ $M_{1}$ recognize $A_{1}$, where $M_{1} = (Q_{1},\sum, \delta_{1}, q_{1}, F_{1})$
-+ $M_{2}$ recognize $A_{2}$, where $M_{2} = (Q_{2},\sum, \delta_{2}, q_{2}, F_{2})$
++ $M_{1}$ recognize $A_{1}$, where $M_{1} = (Q_{1},\Sigma, \delta_{1}, q_{1}, F_{1})$
++ $M_{2}$ recognize $A_{2}$, where $M_{2} = (Q_{2},\Sigma, \delta_{2}, q_{2}, F_{2})$
 
-Construct $M$ to recognize $A_{1} \cup A_{2}$, where $M = (Q,\sum, \delta, q_{0}, F)$.
+Construct $M$ to recognize $A_{1} \cup A_{2}$, where $M = (Q,\Sigma, \delta, q_{0}, F)$.
 
 1. $Q = \{(r_{1}, r_{2}) | r_{1} \in Q_{1} \ \text{and} \ r_{2} \in Q_{2} \}$. This set is
    the *Cartesian product* of sets $Q_{1}$ and $Q_{2}$.
 
-2. $\sum$, the alphabet, is the same as in $M_{1}$ and $M_{2}$. In this theorem and in all subsequent
+2. $\Sigma$, the alphabet, is the same as in $M_{1}$ and $M_{2}$. In this theorem and in all subsequent
    similar theorems, we assume for simplicity that both $M_{1}$ and $M_{2}$ have the same input
-   alphabet $\sum$. The theorem remains true if they have different alphabets, $\sum_{1}$ and
-   $\sum_{2}$. We would then modify the proof to let $\sum = \sum_{1} \cup \sum_{2}$.
+   alphabet $\Sigma$. The theorem remains true if they have different alphabets, $\Sigma_{1}$ and
+   $\Sigma_{2}$. We would then modify the proof to let $\Sigma = \Sigma_{1} \cup \Sigma_{2}$.
 
 3. $\delta$, the transition function, is defined as follow. For each $(r_{1},r_{2}) \in Q$ and
    each $a \in \delta$, let
@@ -163,3 +163,48 @@ Nondeterministic finite automata are useful in several respects:
 + Constructing NFAs is sometimes easier than directly constructing DFAs.
 + An NFA may be much smaller than its deterministic counterpart.
 + An NFA's functioning can be easier to understand.
+
+### 2.1 Formal Definition of A Nondeterministic Finite Automaton
+
+The formal definition of a nondeterministic finite automaton is similar
+to that of a deterministic finite automaton. Both have states, an input
+alphabet, a transition function, a start state, and a collection of
+accept states. However, they differ in one essential way: in the type of
+transition function.
+
+In an NFA, the transition function takes a state and an input symbol or
+*the empty string* and produces *the set of possible next states*. In order
+to write the formal definition, we need to set up some additional notation.
+For any set $Q$, we write $\mathcal{P}(Q)$ to be the collection of all
+subsets of $Q$. Here $\mathcal{P}(Q)$ is called the *power set* of $Q$ For
+any alphabet $\Sigma$ we write $\Sigma_{\epsilon}$ to be $\Sigma \cup \{\epsilon\}$.
+
+A *nondeterministic finite automaton* is a 5-tuple $(Q,\Sigma, \delta,q_{0},F)$ where
+
+1. $Q$ is finite set of states,
+2. $\Sigma$ is a finite alphabet,
+3. $\delta: Q \times \Sigma_{\epsilon} \to \mathcal{P}(Q)$ is the transition function,
+4. $q_{0} \in Q$ is the start state, and
+5. $F \subseteq Q$ is the set of accept states.
+
+The formal definition of computation for an NFA is similar to that for a DFA. Let
+$N = (Q,\Sigma,\delta, q_{0}, F)$ be an NFA and $w$ a string over the alphabet $\Sigma$.
+Then we say that $N$ *accepts* $w$ if we can write $w$ as $w=y_{1}y_{2}\cdots y_{m}$,
+where each $y_{i}$ is a member of $\Sigma_{\epsilon}$ and a sequence of states
+$r_{0}, r_{1}, \dots, r_{m}$ exists in $Q$ with three conditions:
+
+1. $r_{0} = q_{0}$,
+2. $r_{i+1} \in \delta(r_{i}, y_{i+1})$, for $i = 0, \dots, m - 1$ and
+3. $r_{m} \in F$
+
+### 2.2 Equivalence of NFAs and DFAs
+
+We say that two machines are *equivalent* if they recognize the same language.
+
+#### Theorem 3
+
+Every nondeterministic finite automaton has an equivalent deterministic
+finite automaton.
+
+#### Proof 3
+
