@@ -208,3 +208,67 @@ finite automaton.
 
 #### Proof 3
 
+Let $N = (Q,\Sigma, \delta, q_{0}, F)$ be the NFA recognizing some
+language $A$. We construct a DFA $M = (Q', \Sigma, \delta', q_{0}',F')$
+recognizing A. Before doing the full construction, let's first consider
+the easier case wherein $N$ has no $\epsilon$ arrows.
+
+1. $Q'=\mathcal{P}(Q)$. Every state of $M$ is a set of states of $N$.
+2. For $R \in Q'$ and $a \in \Sigma$, let
+$\delta'(R,A) = \{q \in Q | (q \in \delta(r,a))\}$. If $R$ is a state of
+$M$, it is also a set of states of $N$. When $M$ reads a symbol $a$ in
+state $R$, it shows where $a$ takes each state in $R$. Because each
+state may go to a set of states, we take the union of all these states.
+3. $q_{0}' = \{q_{0}\}$.
+4. $F'= \{R \in Q' | R \ \text{contains an accept state of } N\}$. The
+machine $M$ accepts if one of the possible states that $N$ could be in
+at this point is an accept state.
+
+Now we need to consider the $\epsilon$ arrows. To do so, we set up an
+extra bit of notation. For any state $R$ of $M$, we define $E(R)$ to
+be the collection of states that can be reached from members of $R$
+by going only along $\epsilon$ arrows, including the members of $R$
+themselves.
+
+Then we modify the transition function of $M$ to place additional
+fingers on all states that can be reached by going along $\epsilon$
+arrows after every step. Replacing $\delta(r,a)$ by $E(\delta(r,a))$.
+
+Additionally, we need to modify the start state if $M$ to move the
+fingers initially to all possible states that can be reached from
+the start state of $N$ along the $\epsilon$ arrows. Changing
+$q_{0}'$ to be $E(\{q_{0}\})$
+
+#### Corollary
+
+A language is regular if and only if some NFA recognizes it.
+
+## 3. Regular Expressions
+
+In arithmetic, we can use operator $+$ and $\times$ to build up
+expressions. Similarly, we can use the regular operations to build up
+expressions describing languages, which are called *regular expressions*.
+An example is:
+
+$$
+(0 \cup 1) 0 ^{*}
+$$
+
+The value of a regular expression is a language. In this case, the value
+is the language consisting of all strings starting with a $0$ or a $1$
+followed by any number of $0$s.
+
+In regular expressions, the star operation is done first, followed by
+concatenation, and finally union, unless parentheses change the usual
+order.
+
+### 3.1 Formal Definition of a Regular Expression
+
+Say that $R$ is a *regular expression* if $R$ is
+
+1. $a$ for some $a$ in the alphabet $\Sigma$
+2. $\epsilon$
+3. $\empty$
+4. $(R_{1} \cup R_{2})$, where $R_{1}$ and $R_{2}$ are regular expressions
+5. $(R_{1} \circ R_{2})$, where $R_{1}$ and $R_{2}$ are regular expressions
+6. $(R_{1}^{*})$, where $R_{1}$ is a regular expression
