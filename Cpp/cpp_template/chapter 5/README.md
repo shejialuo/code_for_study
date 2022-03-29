@@ -2,7 +2,7 @@
 
 ## Zero Initialization
 
-For fundamental types such as `int`, `double`, `or` pointer types, there is no default
+For fundamental types such as `int`, `double`, or pointer types, there is no default
 constructor that initializes them with a useful default value.
 
 ```c++
@@ -60,6 +60,32 @@ private:
 }
 ```
 
+## Using this->
+
+For class templates with base classes that depend on template parameters, using
+a name `x` by itself is not always equivalent to `this->x`, even though a number
+`x` is inherited. For example:
+
+```c++
+template<typename T>
+class Base {
+public:
+  void bar();
+};
+
+template<typename T>
+class Derived: Base<T> {
+public:
+  void foo() {
+    bar(); // calls external bar() or error.
+  }
+}
+```
+
+In this example, for resolving the symbol `bar` inside `foo()`, `bar()`
+defined in `Base` is *never* considered. Therefore, either you have
+an error, or another `bar()` is called.
+
 ## Generic Lambdas and Member Templates
 
 Note that generic lambdas, introduced with C++14, are shortcuts for member
@@ -88,10 +114,16 @@ public:
 ## Variable Templates
 
 Since C++14, variables also can be parameterized by a specific type. Such
-a thing is called a *variable template*.
+a thing is called a *variable template*. (Like Haskell kind)
 
 ```c++
 template <typename T>
 constexpr T pi{3.1415926535897932285};
 ```
 
+To use a variable template, you have to specify its type:
+
+```c++
+std::cout << pi<double> << '\n';
+std::cout << pi<float> << '\n';
+```
