@@ -17,10 +17,10 @@ public:
   friend std::ostream& operator<<(std::ostream& os, AddSpace<T> s) {
     return os << s.ref << " ";
   }
-}
+};
 
 template<typename... Types>
-void printWithSpace(const Type&... args) {
+void printWithSpace(const Types&... args) {
   (std::cout << ... << AddSpace(args)) << "\n";
 }
 

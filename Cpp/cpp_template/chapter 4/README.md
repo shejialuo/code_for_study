@@ -8,10 +8,28 @@ for variadic templates: `sizeof...`.
 ```c++
 template<typename T, typename... Types>
 void print(T firstArg, Types... args) {
-  std::cout << sizeof...(Types); << '\n'; // print number of remaining types.
-  std::cout << sizeof...(args); << '\n'; // print number of remaining args.
+  std::cout << sizeof...(Types) << '\n'; // print number of remaining types.
+  std::cout << sizeof...(args) << '\n'; // print number of remaining args.
 }
 ```
+
+This might lead us to think we can skip the function for the end of the
+recursion by not calling it in case there are no more arguments:
+
+```c++
+template<typename T, typename... Types>
+void print(T firstArg, Types... args) {
+  std::cout << "firstArg" << '\n';
+  if(sizeof...(args) > 0) {
+    print(args);
+  }
+}
+```
+
+However, this approach doesn't work because in general both branches of
+all *if* statement in function templates are instantiated. Whether the
+instantiated code is useful is a *run-time* decision, while the
+instantiation of the call is a *compile-time* decision.
 
 ## Fold Expressions
 
