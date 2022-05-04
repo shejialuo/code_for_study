@@ -29,8 +29,27 @@ For now, let's assume that we are multiplying only positive numbers.
 ### 3.3.1 Sequential Version of the Multiplication Algorithm and hardware
 
 Let's assume that the multiplier is in the 32-bit multiplier register
-and that the 64-bit product register is initialized to 0
+and that the 64-bit product register is initialized to 0. It's clear
+that we will need to move the multiplicand left one digit each step.
+Over 32 steps, a 32-bit multiplicand would move 32 bits to the left.
+Hence, we need a 64-bit multiplicand register, initialized with
+the 32-bit multiplicand in the right half and zero in the left
+half. This
+register is the shifted left 1 bit each step to align the multiplicand
+with the sum being accumulated in the 64-bit product register.
 
+![Multiplication hardware](https://s2.loli.net/2022/05/04/eiEw1YJR24vHKsZ.png)
+
+### 3.3.2 Signed Multiplication
+
+The easiest way to understand how to deal with signed numbers is to
+first convert the multiplier and multiplicand to positive numbers
+and then remember their original signs. The algorithms should next
+be run for 31 iterations, leaving the signs out of the calculation.
+
+## 3.4 Division
+
+Division is just like multiplication
 
 ## 3.5 Floating Point
 
