@@ -154,3 +154,63 @@ we may need to allow multiple connections to the input of an element,
 using a multiplexor and control signal to select among the multiple inputs.
 
 ![The simple datapath for the core RISC-V architecture](https://s2.loli.net/2022/05/05/jMkEKWBxe2wI1oG.png)
+
+## 4.3 A simple Implementation Scheme
+
+In this section, we look at what might be though of as a simple implementation
+of our RISC-V subset.
+
+### 4.3.1 The ALU Control
+
+The RISC-V ALU defines the four following combinations of our
+control inputs
+
+| ALU control lines | Function |
+|:-----------------:|:--------:|
+|        0000       |    AND   |
+|        0001       |    OR    |
+|        0010       |    add   |
+|        0110       | subtract |
+
+Depending on the instruction class, the ALU will need to perform
+one of these four functions. For load and store instructions, we use
+the ALU to compute the memory address by addition. For the R-type instructions,
+the ALU needs to perform one of the four actions, depending on the
+value of the 7-bit `funct7` field and 3-bit `funct3` field in the instruction.
+For the conditional branch if equal instruction, the ALU subtracts two
+operands and tests to see if the result is 0.
+
+We can generate the 4-bit ALU control input using a small control unit
+that has as inputs the `funct7` and `funct3` fields of the instruction and
+a 2-bit control field, which we call `ALUOp`. `ALUOp` indicates whether
+the operation to be performed should be add, subtract and test, or be
+determined by the operation encoded in the `funct7` and `funct3` fields.
+
+![How the ALU control bits are set](https://s2.loli.net/2022/05/08/KXHB4pzPjt1GyOL.png)
+
+### 4.3.2 Designing the Main Control Unit
+
+There are several major observations about instruction format
+that we will rely on:
+
+![The four instruction classes use four different instruction format](https://s2.loli.net/2022/05/08/CcSJgHxUOPpW6Iy.png)
+
++ The `opcode` field is always in bits 6:0. Depending on the `opcode`,
+the `funct3` field(bits 14:12) and `func7` field(bits 31:25) serve
+as an extended `opcode` field.
++ The first register operand is always in bit positions 19:15(`rs1`)
+for R-type instructions. This field also specifies the base register for
+load and store instructions.
++ The second register operand is always in bit positions 24:20(`rs2`)
+for R-type instructions and branch instructions. This field also
+specifies the register operand that gets copied to memory for
+store instructions.
++ Another operand can also be a 12-bit offset for branch or load-store instructions.
++ The destination register is always in bit positions 11:7(`rd`) for R-type
+instructions and load instructions.
+
+Below shows six single-bit control lines plus the 2-bit `ALUOp` control signal.
+
+![The datapath with all necessary multiplexors and all control lines identified](https://s2.loli.net/2022/05/08/GaMWi7REupSJqUD.png)
+
+![The effect of each of the six control signals](https://s2.loli.net/2022/05/08/Lnr2HiNOuvPbkls.png)
