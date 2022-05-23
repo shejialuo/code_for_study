@@ -20,6 +20,12 @@ public:
 };
 
 int main() {
+  /*
+    * Note that the sorting criterion `PersonSortCriterion`
+    * is a *type*. Thus, you can use it as a template argument
+    * for the set. This would not be possible if you implement
+    * the sorting criterion as a plain function.
+  */
   set<Person, PersonSortCriterion> coll;
   return 0;
 }

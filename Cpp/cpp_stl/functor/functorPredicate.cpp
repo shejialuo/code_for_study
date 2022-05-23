@@ -21,6 +21,11 @@ public:
 int main() {
   list<int> coll = {1,2,3,4,5,6,7,8,9,10};
 
+  /*
+    * Two elements, the third and sixth elements, are removed.
+    * This happens because the usual implementation of the
+    * algorithm copies the predicate internally during the algorithm
+  */
   list<int>::iterator pos;
   pos = remove_if(coll.begin(), coll.end(),
                   Nth(3));
