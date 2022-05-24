@@ -5,7 +5,15 @@
 using namespace std;
 
 /*
-  * It's bad to use vector<shared_ptr<Person>>
+  * `weak_ptr` allows sharing but not owning an object.
+  * This class requires a shared pointer to get created.
+  * Whenever the last shared pointer owning the object loses
+  * its ownership, any weak pointer automatically becomes
+  * empty.
+  *
+  * You can't use operator * and -> to access a referenced
+  * object of a `weak_ptr` directly. Instead, you have to
+  * create a shared pointer out of it.
 */
 class Person {
 public:
@@ -40,9 +48,8 @@ int main() {
   cout << "- name of 1st kid of nico's mon: "
        << p->mother->kids[0].lock()->name << endl;
 
-  // desctructor never happens
   p = initFamily("jim");
-  cout << "jim’s family exists" << endl;
+  cout << "jim's family exists" << endl;
 
   return 0;
 }

@@ -5,6 +5,25 @@
 using namespace std;
 
 /*
+  * The major reson to use `shared_ptr` is to avoid taking
+  * care of the resources a pointer refers to.
+  *
+  * However, under certain circumstances, this behavior doesn't
+  * work or is not waht is intended:
+  *
+  * + One example is cyclic references. If two objects refer to
+  *   each other using `shared_ptr`, and you want to release
+  *   the objects and their associated resource if no other
+  *   references to these objects exist, `shared_ptr` won't
+  *   release the data, because the `use_count()` of each object
+  *   is still 1.
+  * + Another example occurs when you explicitly want to share
+  *   but not own an object. Thus, you have the semantics that
+  *   the lifetime of a reference to an object outlives the
+  *   object it refers to
+*/
+
+/*
   * It's bad to use vector<shared_ptr<Person>>
 */
 class Person {
@@ -42,7 +61,7 @@ int main() {
 
   // desctructor never happens
   p = initFamily("jim");
-  cout << "jim’s family exists" << endl;
+  cout << "jim's family exists" << endl;
 
   return 0;
 }
