@@ -9,7 +9,7 @@ int main() {
            [](int elem) {
              cout << elem << ' ';
            });
-  
+
   cout << endl;
 
   return 0;
