@@ -4,9 +4,9 @@ The real computers are complicated. Instead, we use an idealized
 computer called a *computation model*. We begin with the simplest
 model, called the *finite state machine* or *finite automaton*.
 
-## 1. Finite Automata
+## 1.1 Finite Automata
 
-### 1.1 Introduction
+### 1.1.1 Introduction
 
 In beginning to describe the mathematical theory of finite automata,
 we do so in the abstract, without reference to any particular
@@ -25,7 +25,7 @@ when this automaton receives an input string such as 1101, it processes
 that string and produces an output. The output is either *accept* or
 *reject*.
 
-### 1.2 Formal Definition of A Finite Automaton
+### 1.1.2 Formal Definition of A Finite Automaton
 
 A finite automaton has several parts. It has a set of states and rules
 for going from one state to another, depending on the input symbol. It
@@ -64,7 +64,7 @@ may occur when the diagram would be too big to draw or if the description depend
 on some unspecified parameter. In these cases, we resort to a formal description
 to specify the machine.
 
-### 1.3 Formal Definition of Computation
+### 1.1.3 Formal Definition of Computation
 
 Let $M = (Q,\Sigma, \delta, q_{0}, F)$ be a finite automaton and let $w = w_{1}w_{2}\cdots w_{n}$
 be a string where each $w_{i}$ is a member of the alphabet $\Sigma$. Then $M$ accepts $w$
@@ -76,7 +76,7 @@ if a sequence of states $r_{0},r_{1},\dots,r_{n}$ in $Q$ exists with three condi
 
 A language is called a *regular language* if some finite automaton recognizes it.
 
-### 1.4 The Regular Operations
+### 1.1.4 The Regular Operations
 
 We define three operations on languages, called the *regular operations*, and
 use them to study properties of the regular languages.
@@ -138,7 +138,7 @@ Construct $M$ to recognize $A_{1} \cup A_{2}$, where $M = (Q,\Sigma, \delta, q_{
 The class of regular languages is closed under the concatenation operation. In other words,
 if $A_{1}$ and $A_{2}$ are regular languages then so is $A_{1} \circ A_{2}$.
 
-## 2. Nondeterminism
+## 1.2 Nondeterminism
 
 Nondeterminism is a useful concept that has had great impact on the theory of computation.
 So far in our discussion, every step of a computation follows in a unique way from the
@@ -164,7 +164,7 @@ Nondeterministic finite automata are useful in several respects:
 + An NFA may be much smaller than its deterministic counterpart.
 + An NFA's functioning can be easier to understand.
 
-### 2.1 Formal Definition of A Nondeterministic Finite Automaton
+### 1.2.1 Formal Definition of A Nondeterministic Finite Automaton
 
 The formal definition of a nondeterministic finite automaton is similar
 to that of a deterministic finite automaton. Both have states, an input
@@ -197,7 +197,7 @@ $r_{0}, r_{1}, \dots, r_{m}$ exists in $Q$ with three conditions:
 2. $r_{i+1} \in \delta(r_{i}, y_{i+1})$, for $i = 0, \dots, m - 1$ and
 3. $r_{m} \in F$
 
-### 2.2 Equivalence of NFAs and DFAs
+### 1.2.2 Equivalence of NFAs and DFAs
 
 We say that two machines are *equivalent* if they recognize the same language.
 
@@ -243,7 +243,59 @@ $q_{0}'$ to be $E(\{q_{0}\})$
 
 A language is regular if and only if some NFA recognizes it.
 
-## 3. Regular Expressions
+### 1.2.3 Closure Under the Regular Operations
+
+#### Union
+
+Let $N_{1} = (Q_{1}, \Sigma, \delta_{1}, q_{1}, F_{1})$ recognize $A_{1}$,
+and $N_{2} = (Q_{2}, \Sigma, \delta_{2}, q_{2}, F_{2})$ recognize $A_{2}$.
+
+Construct N = $Q, \Sigma, \delta, q_{0}, F$ to recognize $A_{1} \cup A_{2}$.
+
+1. $Q = \{q_{0}\ \cup Q_{1} \cup Q_{2}\}$.
+
+   The states of $N$ are all the states of $N_{1}$ and $N_{2}$,
+   with the addition of a new start state $q_{0}$.
+2. The state q_{0} is the start state of $N$.
+3. The set of accept states $F = F_{1} \cup F_{2}$.
+4. Define $\delta$ so that for any $q \in Q and any a \in \Sigma_{e}$
+
+   $$
+   \delta(q, a) =
+   \begin{cases}
+      \delta_{1}(q,a) \quad &q \in Q_{1}  \\
+      \delta_{2}(q,a)  \quad &q \in Q_{2} \\
+      \{\delta_{1}, \delta_{2}\} \quad &q = q_{0}, a = \epsilon\\
+      \empty \quad &q = q_{0}, a \neq \epsilon
+   \end{cases}
+   $$
+
+#### Concatenation
+
+Let $N_{1} = (Q_{1}, \Sigma, \delta_{1}, q_{1}, F_{1})$ recognize $A_{1}$,
+and $N_{2} = (Q_{2}, \Sigma, \delta_{2}, q_{2}, F_{2})$ recognize $A_{2}$.
+
+Construct N = $Q, \Sigma, \delta, q_{1}, F$ to recognize $A_{1} \circ A_{2}$.
+
+1. $Q = \{q_{0}\ \cup Q_{1} \cup Q_{2}\}$.
+
+   The states of $N$ are all the states of $N_{1}$ and $N_{2}$,
+   with the addition of a new start state $q_{0}$.
+2. The state q_{1} is the same as the start state of $N_{1}$.
+3. The accept states $F_{2}$ are the same as the accept states of $N_{2}$
+4. Define $\delta$ so that for any $q \in Q and any a \in \Sigma_{e}$
+
+   $$
+   \delta(q, a) =
+   \begin{cases}
+      \delta_{1}(q,a) \quad &q \in Q_{1}, q \notin F_{1}  \\
+      \delta_{1}(q,a)  \quad &q \in F{1}, a \neq \epsilon \\
+      \delta_{1}(q,a) \cup \{q_{2}\} \quad &q \in F_{1}, a = \epsilon\\
+      \delta_{2}(q,a) \quad &q \in Q_{2}
+   \end{cases}
+   $$
+
+## 1.3 Regular Expressions
 
 In arithmetic, we can use operator $+$ and $\times$ to build up
 expressions. Similarly, we can use the regular operations to build up
@@ -262,7 +314,7 @@ In regular expressions, the star operation is done first, followed by
 concatenation, and finally union, unless parentheses change the usual
 order.
 
-### 3.1 Formal Definition of a Regular Expression
+### 1.3.1 Formal Definition of a Regular Expression
 
 Say that $R$ is a *regular expression* if $R$ is
 
@@ -272,3 +324,38 @@ Say that $R$ is a *regular expression* if $R$ is
 4. $(R_{1} \cup R_{2})$, where $R_{1}$ and $R_{2}$ are regular expressions
 5. $(R_{1} \circ R_{2})$, where $R_{1}$ and $R_{2}$ are regular expressions
 6. $(R_{1}^{*})$, where $R_{1}$ is a regular expression
+
+Parentheses in an expression may be omitted. If they are, evaluation is done in
+the precedence order: star, then concatenation, then union.
+
+For convenience, we let $R^{+}$ be shorthand for $RR^{*}$, which
+means $R^{*} = \epsilon \cup \epsilon $.
+
+### 1.3.2 Equivalence With Finite Automata
+
+Regular expressions and finite automata are equivalent in their
+descriptive power.
+
+#### Theorem
+
+A language is regular if and only if some regular expression describes it.
+
+#### Lemma
+
+If a language is described by a regular expression, then it is regular.
+
+#### Proof
+
+Let's convert $R$ into an NFA $N$. We consider the six cases in
+the formal definition of regular expressions.
+
++ $R = a$ for some $a \in \Sigma$. Then $L(R) = \{a\}$.
++ $R = \epsilon$. Then $L(R) = \{\epsilon\}$
++ $R = \empty$. Then $L(R) = \empty$
++ Thus we can recursively prove.
+
+## 1.4 Nonregular Languages
+
+To understand the power of finite automata, you must also understand their
+limitations. In this section, we show how to prove that certain languages
+cannot be recognized by any finite automaton.

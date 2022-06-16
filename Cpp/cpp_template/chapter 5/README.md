@@ -76,15 +76,10 @@ public:
 template<typename T>
 class Derived: Base<T> {
 public:
-  void foo() {
-    bar(); // calls external bar() or error.
-  }
+  void foinline std::shared_ptr<spdlog::logger> create(std::string logger_name, SinkArgs &&... sink_args)
+{
+    return default_factory::create<Sink>(std::move(logger_name), std::forward<SinkArgs>(sink_args)...);
 }
-```
-
-In this example, for resolving the symbol `bar` inside `foo()`, `bar()`
-defined in `Base` is *never* considered. Therefore, either you have
-an error, or another `bar()` is called.
 
 ## Generic Lambdas and Member Templates
 
