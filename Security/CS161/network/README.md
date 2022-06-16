@@ -15,7 +15,6 @@ For subnets using broadcast technologies, attacker can eavesdrop.
 + Each attached system's NIC can capture any communication on the subnet.
 + Tools: `tcpdump`/`windump`, wireshark.
 
-
 ### Spoofing
 
 Attacker can inject spoofed packets, and lie about the source address:
@@ -35,8 +34,7 @@ to match it.
 
 ### Abrupt Termination
 
-<!--TODO: Add the picture here  -->
-![A sends RST to B](.)
+![A sends RST to B](https://s2.loli.net/2022/06/16/asFXVDLJrMtHuh1.png)
 
 When A sends a TCP packet with RST flag to B and sequence number fits, connection
 is immediately terminated.
@@ -58,7 +56,16 @@ the port and sequence numbers.
 
 ### Blind Spoofing on TCP handshake
 
-<!--TODO: important!  -->
+When the attacker wants to do blind spoofing on TCP handshake, the attacker could
+send a packet to the server. There are two situations here:
+
++ If alleged client receives the response from the server, the alleged client
+will be confused, sends a RST back to server. So attacker may need to hurry!
+But firewalls may inadvertently stop this reply to the alleged client so
+it never ends the RST.
++ It's a problem for attacker to get the value of the `seq` field of the response,
+in the older time, the value could be guessed, now the value is total random. This
+is the reason why `seq` fields need to random.
 
 ### Summary
 
@@ -87,3 +94,4 @@ Thus, we can conclude the following ideas:
 a trusted foundation to build upon.
 + MITM attacks insidious because no indicators they're occurring.
 
+## TLS
