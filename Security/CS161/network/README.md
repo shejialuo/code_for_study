@@ -95,3 +95,73 @@ a trusted foundation to build upon.
 + MITM attacks insidious because no indicators they're occurring.
 
 ## TLS
+
+### Building Secure End-to-End Channels
+
++ End-to-end = communication protections achieved all the way
+from originating client to intended server.
++ Dealing with threads
+  + Eavesdropping: Encryption
+  + Manipulation (injection, MITM): Integrity(use of a Mac); replay protection
+  + Impersonation: Signatures.
+
+### RSA
+
+![RSA TLS](https://s2.loli.net/2022/06/17/SN8JqDk71QznXfW.png)
+
++ Browser constructs "Premaster Secrete" PS.
++ Browser sends PS encrypted using Amazon’s public RSA key.
++ Using PS, $R_{B}$, and $R_{s}$, browser and server derive symm.
+cipher keys $(C_{B}, C_{S})$ and MAC integrity keys $(I_{B}, I_{S})$.
++ Browser and server exchange MACs computed over entire dialog so far.
++ If good MAC, browser display green lock.
+
+### Diffie-Hellman
+
+![Diffie-Hellman TLS](https://s2.loli.net/2022/06/17/Nm1KajUnkXefZbh.png)
+
++ Server generates random $a$, sends public params and $g^a \mod p$.
++ Browser verifies signature using PK from the certificate.
++ Browser generates random $b$, computes $g^{ab} \mod p$, sends to server.
++ Server also computes $g^{ab} \mod p$.
++ As before.
+
+## Denial of Service (DoS)
+
+There are attacks on availability:
+
++ Denial-of-Service: preventing legitimate users from using a computing service.
++ Distributed Denial-of-Service (DDoS) occurs when a server is
+flooded with traffic from many different devices.
+
+There are some basic approaches to do attacks on availability:
+
++ Deny service via a *program flaw*.
++ Deny service via *resource exhaustion*.
++ Network-level DoS vs application-level DoS.
+
+### Network-level DoS
+
+We could exhaust network resources by
+
++ Flooding with lots of packets (brute-force)
++ DDoS: flood with packets from may sources.
++ Amplification: abuse patsies who will amplify your traffic for you.
+
+### Transport-Level Denial-of-Service
+
+TCP's 3-way connection establishment handshake used to agree on initial
+sequence numbers. So a single SYN from an attacker suffices to force
+the server to spend some memory. This is called TCP SYN Flooding.
+
+![TCP SYN Flooding](https://s2.loli.net/2022/06/17/Jd5Vsbr3RflpOZt.png)
+
++ Attacker targets memory rather than network capacity.
++ Every (unique) SYN that the attacker sends burdens the target.
+
+How should we defense this, the answer is simple: don't keep state!
+
+When SYN arrives, rather than keeping state locally, send it to the client.
+And the client needs to return the state in order to established connection.
+The problem is that how to store the state, so the server encode connection
+entirely within SYN-ACK sequence, which is called *SYN cookie*.
