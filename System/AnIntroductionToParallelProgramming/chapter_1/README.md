@@ -74,8 +74,7 @@ In a distributed-memory system, each core has its own, private memory,
 and the cores can communicate explicitly by sending messages
 across a network.
 
-<!-- TODO: Add the picture -->
-![A shared memory system and a distributed memory system](.)
+![A shared memory system and a distributed memory system](https://s2.loli.net/2022/06/24/k8lPnjQOph5b4SC.png)
 
 The second classification divides parallel systems according to
 the number of independent instruction streams and the number of
@@ -89,3 +88,9 @@ own data stream. So this type of system is called a MIMD
 An alternative is to have a parallel system with cores that are
 not capable of managing their own instruction streams: they can
 be thought of as cores with no control unit. Rather, the cores
+share a single control unit. However, each core can access either
+its own private memory or memory that's shared among
+the cores. In this type of system, all the cores carry out
+the same instruction on their own data, so this type of
+system is called a **Single-Instruction Multiple-Data** or
+**SIMD** system.
