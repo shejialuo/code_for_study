@@ -336,15 +336,15 @@ means $R^{*} = \epsilon \cup \epsilon $.
 Regular expressions and finite automata are equivalent in their
 descriptive power.
 
-#### Theorem
+#### Theorem 4
 
 A language is regular if and only if some regular expression describes it.
 
-#### Lemma
+#### Theorem 5
 
 If a language is described by a regular expression, then it is regular.
 
-#### Proof
+#### Proof 5
 
 Let's convert $R$ into an NFA $N$. We consider the six cases in
 the formal definition of regular expressions.
@@ -359,3 +359,29 @@ the formal definition of regular expressions.
 To understand the power of finite automata, you must also understand their
 limitations. In this section, we show how to prove that certain languages
 cannot be recognized by any finite automaton.
+
+Let's take the language $B = \{0^n1^n | n \geq 0\}$. If we attempt
+to find a DFA that recognizes $B$, we discover that the
+machine seems to need to remember how many 0s have been
+seen so far as it reads the input. It cannot do so with
+any finite number of states.
+
+### 1.4.1 The Pumping Lemma For Regular Languages
+
+Our technique for proving nonregularity stems from a theorem about
+regular languages, traditionally called the *pumping lemma*. This theorem
+states that all regular languages have a special property.
+The property states that all strings in the language can be
+"pumped" if they are at least as long as a certain special value,
+called the *pumping length*.
+
+#### Theorem 6
+
+**Pumping lemma**: If $A$ is a regular language, then there is a
+number $p$ (the pumping length) where if $s$ is any string in $A$
+of length at least $p$, then $s$ may be divided into three pieces,
+$s=xyz$, satisfying the following conditions:
+
+1. for each $i >= 0$, $xy^iz$ in $A$,
+2. $|y| > 0$ and
+3. $|xy| \leq p$.
