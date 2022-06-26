@@ -39,5 +39,62 @@ location can be invidiously enabled or disabled.
 
 ### 5.1.2 Setting Watchpoints
 
+You can use a watchpoint to stop execution whenever the value of an expression
+changes, without having to predicate a particular place where this may happen.
 
+GDB does software watchponting by single-stepping your program and testing
+the variable's value each time, which is hundreds of times slower than normal
+execution.
 
+On some systems, GDB includes support for hardware watchpoints, which do
+not slow down the running of your program.
+
+GDB automatically deletes watchpoints that watch local variables, or
+expressions that involve such variables, when they go out of scope.
+
+### 5.1.3 Setting Catchpoints
+
+You can use *catchpoints* to cause the debugger to stop for certain kinds
+of program events, such as C++ exceptions or the loading of a shared library.
+Use the `catch` command to set a catchpoint.
+
+### 5.1.4 Deleting Breakpoints
+
+Withe the `clear` command you can delete breakpoints according to where they
+are in your program. With the `delete` command you can delete individual
+breakpoints, watchpoints, or catchpoints by specifying their breakpoint numbers.
+
+### 5.1.5 Disabling Breakpoints
+
+You disable and enable breakpoints, watchpoints, and catchpoints with the `enable`
+and `disable` commands, optionally specifying one or more breakpoint numbers as arguments.
+
+### 5.1.6 Dynamic Printf
+
+The dynamic printf command `dprintf` combines a breakpoint with
+formatted printing of your program's data to give you the effect of
+inserting `printf` calls into your program on the fly, without having to
+recompile it.
+
+### 5.1.7 How to save breakpoints to a file
+
+To save breakpoint definitions to a file use the `save breakpoints` command.
+
+## 5.2 Continuing
+
+Continuing means resuming program execution until your program
+completes normally. In contrast, *stepping* means executing just one
+more "step" of your program, where "step" may mean either one line of
+source code, or one machine instruction.
+
+## 5.3 Skipping Over Functions and Files
+
+The program you are debugging may contain some functions which are
+uninteresting to debug. The `skip` command lets you tell GDB to skip a function,
+all functions in a file or a particular function in a particular file
+when stepping.
+
+## 5.4 Signals
+
+GDB has the ability to detect any occurrence of a signal in your program.
+You can tell GDB in advance what to do for each kind of signal.
