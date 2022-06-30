@@ -244,7 +244,7 @@ void userinit(void) {
 
 ## Schedule
 
-xv6 defines `scheduler` function to yield the current process and
+xv6 defines `scheduler` function to yield the CPU and
 switch to the other RUNNABLE process.
 
 ```c
@@ -274,7 +274,7 @@ of the simplicity of the RISC-V. However, you may be confused about the
 `c-proc = 0`. When we have finished the `switch` function, the
 cpu is going to execute the process' code. So we must let the control
 come back to the scheduler when the time interrupt happens.
-Remember in `trap.c`, when the time intrrupt happens, it calls `yield` to give
+Remember in `trap.c`, when the time interrupt happens, it calls `yield` to give
 up the CPU.
 
 ```c
@@ -306,6 +306,19 @@ void sched(void) {
   mycpu()->intena = intena;
 }
 ```
+
+However, here we need to talk about more detail. Actually, the `sched` and
+`scheduler` are cooperating together to finish the work. When using `scheduler`,
+the `switch` stores return address into `struct context`, and when using
+`sched`, the `switch` restores the cpu return address, thus the flow goes back
+to the `scheduler`. The same is as the process, when using `sched`, the `switch`
+stores return address into `struct context`, and when using `scheduler`, the
+`switch` restores the process return address, thus the flow goes back to the
+`sched`.
+
+And all these opeartions happened at the time interruption which is transparent
+to the scheduling. Acutally, scheduling is just about to storing the context. But
+I think this coordinator is GOOD way. I have learned much about it.
 
 ### Summary
 
