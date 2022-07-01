@@ -333,3 +333,63 @@ makes sure that the current stage is stored in the `struct trapframe`,
 and uses `yield` to give up the CPU and returns to the
 `scheduler` to
 run another process.
+
+## Process Operation
+
+Like Linux, xv6 defeins the `fork` to create a new process and
+copy the parent.
+
+```c
+int fork(void) {
+  int i, pid;
+  struct proc *np;
+  strucr proc *p = myproc();
+
+  if((np = allocproc()) == 0) {
+    return -1;
+  }
+  if(uvmcopy(p->pagetable, np->pagetable, p->sz) < 0){
+    freeproc(np);
+    release(&np->lock);
+    return -1;
+  }
+  np->sz = p->sz;
+
+  *(np->trapframe) = *(p->trapframe);
+
+  np->trapframe->a0 = 0;
+  for(i = 0; i < NOFILE; i++)
+    if(p->ofile[i])
+      np->ofile[i] = filedup(p->ofile[i]);
+  np->cwd = idup(p->cwd);
+  safestrcpy(np->name, p->name, sizeof(p->name));
+  pid = np->pid;
+  release(&np->lock);
+
+  acquire(&wait_lock);
+  np->parent = p;
+  release(&wait_lock);
+
+  acquire(&np->lock);
+  np->state = RUNNABLE;
+  release(&np->lock);
+
+  return pid;
+}
+```
+The interesting part is that the `fork` uses `np->trapframe->a0 = 0` to
+return 0 in the child. It is simple enough.
+
+When the children are abandoned, we should make its parent to be `init`.
+
+```c
+void reparent(struct proc* p) {
+  struct proc* pp;
+  for(pp = proc; pp < &proc[NPROC]; pp++) {
+    if(pp->parent = p) {
+      pp->parent = initproc;
+      wakeup(initproc);
+    }
+  }
+}
+```
