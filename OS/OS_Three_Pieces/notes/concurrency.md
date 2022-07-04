@@ -96,3 +96,16 @@ int CompareAndSwap(int *ptr, int expected, int new) {
 ### Just yield
 
 Spinning isn't an efficient way. We should reschedule the process.
+
+## Conditional Variables
+
+To wait for a condition to become true, a thread can make use of what
+is known as a condition variable. A condition variable is an explicit
+queue that threads can put themselves on when some state of execution
+is not as desired; some other thread, when it changes said state, can then wake
+one of those waiting threads and thus allow them to continue.
+
+## Semaphores
+
++ 1: Locks
++ 0: Condition Variables
