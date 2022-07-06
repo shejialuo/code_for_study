@@ -211,5 +211,280 @@ As the name suggests, *switched* interconnects use switches to control the
 routing of data among the connected devices. A *crossbar* is a relatively
 simple and powerful switched interconnect.
 
+The below diagram (a) shows a simple crossbar. The lines are bidirectional
+communication links, the squares are cores or memory modules. amd
+the circles are switches.
+
+The individual switches can assume one of the two configurations shown
+in (b). With these switches and at least as many memory modules
+as processors, there will only be a conflict between two cores attempting
+to access memory if the two cores attempt to simultaneously access
+the same memory module.
+
+![Crossbar](https://s2.loli.net/2022/07/05/9pT2oGvmBRjgUsz.png)
+
 Crossbars allow simultaneous communication among different devices, so they
 are much faster than buses however more expensive.
+
+#### 2.3.4.2 Distributed-memory interconnects
+
+Distributed-memory interconnects are often divided into two groups:
+direct interconnects and indirect interconnects. In a *direct interconnect*
+each switch is directly connected to a processor-memory pair, and the
+switches are connected to each other. *Indirect interconnects* provide an
+alternative to direct interconnects. In an indirect interconnect, the switches
+may not be directly connected to a processor. They're often shown with unidirectional
+links and a collection of processors, each of which has an outgoing
+and an incoming link, and a switching network.
+
+### 2.3.5 Cache coherence
+
+Suppose we have a shared-memory system with two cores, each of which
+has its own private data cache. As long as the two cores only read
+shared dta, there is no problem.However, things would become complicated if not.
+
+<!-- TODO: Add the picture -->
+![A shared-memory system with two cores and two caches](.)
+
+For example, suppose that `x` is a shared variable that has been initialized
+to 2, `y0` is private and owned by core 0, and `y1` and `z1` are private
+and owned by core 1. Now suppose the following statements are
+executed at the indicated times.
+
+| **Time** |          **Core 0**          |          **Core 1**          |
+|:--------:|:----------------------------:|:----------------------------:|
+|     0    |            y0 = x;           |          y1 = 3 * x          |
+|     1    |            x = 7;            | statement(s) not involving x |
+|     2    | statement(s) not involving x |          z1 = 4 * x          |
+
+It's not clear what value `z1` will get. This unpredictable behavior will
+occur regardless of whether the system is using a write-through or a write-back
+policy. If it's using a write-through policy, the main memory will be updated
+by the assignment `x = 7`. However, this will have no effect on the value
+in the cache of core 1. If the system is using a write-back policy,
+the new value of `x` in the cache of core 0 probably won't be available
+to core 1 when it updates `z1`.
+
+Clearly, this is a problem. The programmer doesn't have direct control
+over when the caches are updated. The caches we described for single
+processor systems provide no mechanism for ensuring that when the
+caches of multiple processors store the same variable, an update
+by one processor to the cached variable is "seen" by the other
+processors. This is called the *cache coherence* problem.
+
+#### 2.3.5.1 Snooping cache coherence
+
+There are two main approaches to ensuring cache coherence:
+
++ *Spooning cache coherence*.
++ *directory-based cache coherence*.
+
+The idea behind snooping comes from bus-based systems. Thus when core 0
+updates the copy of `x` stored in its cache, if it also broadcasts this
+information across the bus, and if core 1 is "snooping" the bus, it
+will see that `x` has been updated, and it can mark its copy of `x`
+as invalid. The principal difference between the description and
+the actual snooping protocol is that the broadcast only informs
+the other cores that the *cache line* contaning `x` has been updated,
+not that `x` has been updated.
+
+#### 2.3.5.2 Directory-based cache coherence
+
+Unfortunately, in large networks, broadcasts are expensive, and snooping cache
+coherence requires a broadcast every time a variable is updated. So snooping
+cache coherence isn't scalable, because for larger systems it will
+cause performance to degrade.
+
+*Directory-based cache coherence* protocols attempt to solve this problem
+through the use of a data structure called a *directory*. The directory
+stores the status of each cache line. Typically, this data structure
+is distributed.
+
+## 2.4 Parallel software
+
+First, we need introduce some terminology. Typically when we run our
+shared-memory programs, we'll start a single process and fork multiple
+threads. So when we discuss shared-memory programs, we'll talk about
+*threads* carrying out tasks. On the other hand, when we run distributed-memory
+programs, we'll start multiple processes, and we'll talk about *processes*
+carrying out tasks. When the discussion applies equally well to
+shared-memory and distributed-memory systems, we'll talk about
+*processes/threads* carrying out tasks.
+
+### 2.4.1 Coordinating the processes/threads
+
+In a very few cases, obtaining excellent parallel performance is trivial. For
+example, suppose we have two arrays and we want to add them.
+
+```c
+double x[n], y[n];
+for(int i = 0; i < n; ++i) {
+  x[i] += y[i];
+}
+```
+
+To parallelize this, we only need to assign elements of the arrays to
+the processes/threads, we might make process/thread 0 responsible for elements
+$0, \dots, n / p - 1$ and so on.
+
+So for this example, the programmer only needs to
+
++ Divide the work among the processes/threads in such as way that
+  + Each process/thread gets roughly the same amount of work.
+  + The amount of communication required is minimized.
++ Arrange for the processes/threads to synchronize.
++ Arrange for communication among the processes/threads.
+
+### 2.4.2 Shared-memory
+
+As we noted earlier, in shared-memory programs, variables can be
+*shared* or *private*.
+
+#### 2.4.2.1 Dynamic and static threads
+
+In many environments, shared-memory programs use *dynamic threads*. In this
+paradigm, there is often a master thread and at any given instant
+a collection of worker threads. The master thread typically waits for
+work requests over a network and when a new request arrives, it forks
+a worker thread, the thread carries out the request, and when the thread
+completes the work, it terminates and joins the master thread. This
+paradigm makes efficient use of system resources, since the resources
+required by a thread are only being used while the thread is actually running.
+
+An alternative to the dynamic paradigm is the *static thread* paradigm. In
+this paradigm, all of the threads are forked after any needed setup by
+the master thread and the threads run until all the work is completed.
+After the threads join the master thread, the master thread may do some
+cleanup, and then it also terminates. In terms of resource usage,
+this may be less efficient. However, forking and joining threads
+can be fairly time-consuming operations. So if the necessary resources are available,
+the static thread paradigm has the potential for better performance
+than the dynamic paradigm.
+
+#### 2.4.2.2 Nondeterminism
+
+In any MIMD system in which the processors execute asynchronously it is
+likely that there will be *nondeterminism*.
+
+### 2.4.3 Distributed-memory
+
+In distributed-memory programs, the cores can directly access only
+their own, private memories. There are several APIs that are used. However,
+by far the most widely used is message-passing.
+
+The first thing to note regarding distributed-memory APIs is that
+they can be used with shared-memory hardware. It's perfectly feasible
+for programmers to logically partition shared-memory into private address
+spaces for the various threads, and a library or compiler can
+implement the communication that's needed.
+
+#### 2.4.3.1 Message-passing
+
+A message-passing API provides (at a minimum) a send a receive function.
+Processes typically identify each other by ranks in the range
+$0, 1, \dots, p - 1$, where $p$ is the number of processes.
+For example, process 1 might send a message to process 0 with
+the following code:
+
+```c
+char message[100];
+
+my_rank = Get_rank();
+if(my_rank == 1) {
+  sprintf(message, "Greetings from process 1");
+  Send(message, MSG_CHAR, 100, 0);
+} else if(my_rank == 0) {
+  Receive(message, MSG_CHAR, 100, 1);
+  printf("Process 0 > Received: %s\n", message);
+}
+```
+
+The most widely used API for message-passing is the *Message-Passing Interface* or MPI.
+
+#### 2.4.3.2 Ond-sided communication
+
+In *one-sided communication*, or *remote memory access*, a single process
+calls a function, which updates either local memory with a value
+from another process or remote memory with a value from the calling process.
+
+### 2.4.4 GPU programming
+
+The memory for the CPU host and the GPU memory are usually separate. So
+the code that runs on the host typically allocates and initializes storage
+on both the CPU and GPU. It will start the program on the GPU, and it is
+responsible for the output of the results of the GPU program. Thus GPU
+programming is really *heterogeneous* programming, since it involves programming
+two different types of processors.
+
+The GPU itself will have one or more processors. Each of these processors
+is capable of running hundreds or thousands of threads.
+
+The threads running on a processor are typically divided into groups:
+the threads within a group use the SIMD model, and two threads in
+different groups can run independently.
+
+Another issue in GPU programming that's different from CPU programming
+is how the threads are
+scheduled to execute. GPUs use a hardware scheduler, and this hardware
+scheduler uses very little overhead. However, the scheduler will choose
+to execute an instruction when all the threads in SIMD group are ready.
+
+## 2.5 Input and output
+
+### 2.5.1 MIMD systems
+
+We'll make these assumptions and following these rules when our
+parallel programs need to do I/O:
+
++ In distributed-memory programs, only process 0 will access `stdin`. In
+shared-memory programs, only the master thread or thread 0 will access `stdin`.
++ In both distributed-memory and shared-memory programs, all the
+processes/threads can access `stdout` and `stderr`.
++ However, because of the nondeterministic order of output to `stdout`,
+in most cases only a single process/thread will be used for all
+output to `stdout`. The principal exception will be output for
+debugging a program. In this situation, we'll often have multiple
+processes/threads writing to `stdout`.
+
+### 2.5.2 GPUs
+
+In most cases, the host code in our GPU programs will carry out all I/O.
+
+## 2.6 Performance
+
+### 2.6.1 Speedup and efficiency in MIMD systems
+
+Usually the best our parallel program can do is to divide the work
+equally among the cores while at the same time introducing no
+additional work for the cores. If we call the serial run-time $T_{serial}$ and
+our parallel run-time $T_{parallel}$, then it's usually the case that
+the best possible run-time of our parallel program is $T_{parallel} = T_{serial} / p$.
+When this happens, we say that our parallel program has *linear speedup*.
+
+In practice, we usually don't get perfect linear speedup, because
+the use of multiple processes/threads almost invariably introduces
+some overhead. For example, shared-memory programs will almost always
+have critical sections, which will require that we use some mutual exclusion
+mechanism, such as a mutex. The calls to the mutex functions
+are the overhead that's not present in the serial program, and the use
+of the mutex forces the parallel program to serialize execution of the
+critical section. Distributed-memory programs will almost always
+need to transmit data across the network, which is usually much
+slower than local memory access. Thus it will be *unusual* for us
+to find that our parallel programs get linear speedup. Furthermore,
+it's likely tha the overheads will increase as we increase the
+number of processes or threads.
+
+So we define the *speedup* of a parallel program to be
+
+$$
+S = \frac{T_{serial}}{T_{parallel}}
+$$
+
+And we have $S = p$ for the linear speedup. And we define $S /p$
+the *efficiency* of the parallel program. If we substitute the
+formula for $S$, we see that the efficiency is
+
+$$
+E = \frac{S}{p} = \frac{T_{serial}}{p \cdot T_{parallel}}
+$$
