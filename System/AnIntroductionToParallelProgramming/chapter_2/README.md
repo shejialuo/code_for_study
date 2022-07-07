@@ -243,8 +243,7 @@ Suppose we have a shared-memory system with two cores, each of which
 has its own private data cache. As long as the two cores only read
 shared dta, there is no problem.However, things would become complicated if not.
 
-<!-- TODO: Add the picture -->
-![A shared-memory system with two cores and two caches](.)
+![A shared-memory system with two cores and two caches](https://s2.loli.net/2022/07/07/293vhoMWaUL4iDp.png)
 
 For example, suppose that `x` is a shared variable that has been initialized
 to 2, `y0` is private and owned by core 0, and `y1` and `z1` are private
@@ -488,3 +487,70 @@ formula for $S$, we see that the efficiency is
 $$
 E = \frac{S}{p} = \frac{T_{serial}}{p \cdot T_{parallel}}
 $$
+
+If the serial run-time has been taken on the same type of core that
+the parallel system is using, we can think of efficiency as the
+average utilization of the parallel cores on solving the problem.
+That is, the efficiency can be thought of as the fraction of the
+parallel run-time that's spent, on average, by each core working
+on solving the original problem. The remainder of the parallel run-time
+is the parallel overhead. This can be seen by simply multiplying
+the efficiency and the parallel run-time.
+
+$$
+E \cdot T_{parallel} = \frac{T_{serial}}{p}
+$$
+
+Many parallel programs are developed by explicitly dividing the work
+of the serial program among the processes/threads and adding in the
+necessary "parallel overhead", such as mutex exclusion or communication.
+Therefore if $T_{overhead}$ denotes this parallel overhead, it's often
+the case that
+
+$$
+T_{parallel} = T_{serial} / p + T_{overhead}
+$$
+
+### 2.6.2 Amdahl's law
+
+*Amdahl's law* says unless virtually all of a serial program is parallelized,
+the possible speedup is going to be very limited—regardless of
+the number of cores available.
+
+For example, we're able to parallelize 90% of a serial program.
+Furthermore, suppose that the parallelization is "perfect", we let
+$T_{serial} = 20$, and we could have
+
+$$
+S = \frac{T_{serial}}{0.9 \times T_{serial} / p + 0.1 \times T_{serial}} = \frac{20}{18 /p + 2} <= 10
+$$
+
+Even though we could make $p$ so large, we'll never get a speedup
+better than 10.
+
+More generally, if a fraction $r$ of our serial program remains
+un-parallelized the Amdahl's law syas we can't get a speedup better than
+$1 / r$.
+
+### 2.6.3 Scalability in MIMD systems
+
+In discussion of MIMD parallel program performance, scalability has a somewhat
+more formal definition. Suppose we run a parallel program with a fixed
+number of processes/threads and a fixed input size, and we obtain
+efficiency $E$. Suppose we now increase the number of processes/threads that are
+used by the program. If we find a corresponding rate of increase in the problem
+size so that the program always has efficiency $E$, the the program is *scalable*.
+
+## 2.7 Parallel program design
+
+So we've got a serial program. How do we parallelize it?
+
+1. *Partitioning*. Divide the computation to be performed and the
+data operated on by the computation into small tasks.
+2. *Communication*. Determine what communication needs to be carried out.
+3. *Agglomeration or aggregation*. Combine tasks and communications identified
+in the first step into larger tasks.
+4. *Mapping*. Assign the composite tasks identified in the previous
+step to processes/threads.
+
+This is sometimes called *Foster's methodology*.
