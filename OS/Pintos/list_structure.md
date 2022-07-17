@@ -124,3 +124,129 @@ void list_insert(struct list_elem* before, struct list_elem* elem) {
   before->prev = elem;
 }
 ```
+
+Like STL, Pintos defines `list_push_front` and `list_push_back`.
+
+```c
+void list_push_front(struct list* list, struct list_elem* elem) {
+  list_insert(list_begin(list), elem);
+}
+
+void list_push_back(struct list* list, struct list_elem* elem) {
+  list_insert(list_end(list), elem);
+}
+```
+
+Now that we have defined the insert operation, now we will get to remove operation.
+
+```c
+struct list_elem* list_remove(struct list_elem* elem) {
+  ASSERT(is_interior(elem));
+  elem->prev->next = elem->next;
+  elem->next->prev = elem->prev;
+  return elem->next;
+}
+```
+
+And there are some basic operations, I omit detail here.
+
+```c
+struct list_elem* list_pop_front(struct list* list) {
+  struct list_elem* front = list_front(list);
+  list_remove(front);
+  return front;
+}
+
+struct list_elem* list_pop_back(struct list* list) {
+  struct list_elem* back = list_back(list);
+  list_remove(back);
+  return back;
+}
+```
+
+And Pintos defines `list_front` and `list_back` to get the first
+element and the last element.
+
+```c
+struct list_elem* list_front(struct list* list) {
+  ASSERT(!list_empty(list));
+  return list->head.next;
+}
+
+struct list_elem* list_back(struct list* list) {
+  ASSERT(!list_empty(list));
+  return list->tail.prev;
+}
+```
+
+The interesting function Pintos defines is `list_splice` which
+removes elements `[FIRST, LAST]` and inserts them just before `BEFORE`.
+
+```c
+void list_splice(struct list_elem* before, struct list_elem* first, struct list_elem* last) {
+  ASSERT(is_interior(before) || is_tail(before));
+  if (first == last)
+    return;
+  last = list_prev(last);
+
+  ASSERT(is_interior(first));
+  ASSERT(is_interior(last));
+
+  first->prev->next = last->next;
+  last->next->prev = first->prev;
+
+  /* Splice FIRST...LAST into new list. */
+  first->prev = before->prev;
+  last->next = before;
+  before->prev->next = first;
+  before->prev = last;
+}
+```
+
+Because of the node is just simply allocated on the stack, so we just
+drop the node with two lines `first->prev->next = last->next`
+and `last->next->prev = first->prev`.
+
+Next, Pintos defines `list_size` to get the number of elements in the list.
+
+```c
+size_t list_size(struct list* list) {
+  struct list_elem* e;
+  size_t cnt = 0;
+  for(e = list_begin(list); e != list_end(list); e = list_next(e))
+    cnt++;
+  return cnt;
+}
+```
+
+And `list_empty` returns true if list is empty.
+
+```c
+bool list_empty(struct list* list) {
+  return list_begin(list) == list.end(list);
+}
+```
+
+Pintos defines `swap` to swap the node itself, actually this is a
+good idea to do some algorithm questions.
+
+```c
+static void swap(struct list_elem** a, struct list_elem** b) {
+  struct list_elem* t = *a;
+  *a = *b;
+  *b = t;
+}
+```
+
+And Pintos defines `is_sorted` to determine interval `[A,B]` are in order
+according to `LESS`.
+
+```c
+static bool is_sorted(struct list_elem* a, struct list_elem* b, list_less_func* less, void* aux) {
+  if(a != b)
+    while((a = list_next(a)) != b)
+      if(less(a, list_prev(a), aux))
+        return false;
+  return true;
+}
+```
