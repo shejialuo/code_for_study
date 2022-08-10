@@ -372,7 +372,7 @@ is called "third normal form".
 
 A relation $R$ is in *third normal form* (3NF) if:
 
-+ Whenever $A_{1}A_{2} \codts A_{n} \to B_{1}B_{2} \cdots B_{m}$ is a nontrivial FD,
++ Whenever $A_{1}A_{2} \cdots A_{n} \to B_{1}B_{2} \cdots B_{m}$ is a nontrivial FD,
 either $\{A_{1},A_{2},\dots,A_{n}\}$ is a superkey, or those of $B_{1},B_{2},\dots,B_{m}$
 that are not among the A's, are each a member of some key.
 
@@ -412,4 +412,58 @@ are independent of one another.
 
 ### 6.1 Definition of Multivalued Dependencies
 
-<!-- TODO: Chapter 6 and Chapter 7 -->
+A *multivalued dependency* (MVD) is a statement about some relation $R$
+that when you fix the values for one set of attributes, then
+the values in certain other attributes are independent of the values
+of all the other attributes in the relation.
+
+More precisely, we say the MVD $A_{1}A_{2}\cdots A_{n} \twoheadrightarrow B_{1}B_{2} \cdots B_{m}$
+holds for a relation $R$ if when we restrict ourselves to the
+tuples of $R$ that have particular values for each of the attributes among the $A$,
+the the set of values we find among $B$ is independent of the
+set of values we find among the attributes of $R$ that are not
+among the $A$ or $B$.
+
+Still more precisely, we say this MVD holds if for each pair of
+tuples $t$ and $u$ of relation of relation $R$ that agree on
+all the $A$, we can find in $R$ some tuple $v$ that agrees:
+
++ With both $t$ and $u$ on the $A$.
++ With $t$ on the $B$, and
++ With $u$ on all attributes of $R$ are not among the $A$ or $B$.
+
+### 6.2 Fourth Normal Form
+
+The "fourth normal form" condition is essentially the BCNF condition,
+but applied to MVD instead of FD.
+
+### 6.3 Decomposition into Fourth Normal Form
+
+**Algorithm**: Decomposition into Fourth Normal Form.
+
+**Input**: A relation $R_{0}$ and a set of functional and multivalued dependencies $S_{0}$.
+
+**Output**: A decomposition of $R_{0}$ into a relations all of
+which are in 4NF. The decomposition has the lossless-join property.
+
+**Method**: Perform the following steps, with $R=R_{0}$ and $S=S_{0}$
+
+1. Find a 4NF violation in $R$.
+2. If there is such a 4NF violation, break the schema for the relation
+$R$ that has the 4NF violation into two schemas: $R_{1}$, whose
+schema is $A$ and $B$. $R_{2}$, whose schema is the $A$ and all attributes
+of $R$ that are not among the $A$ and $B$.
+3. Find the FD and MVD that hold in $R_{1}$ and $R_{2}$. Recursively
+decompose $R_{1}$ and $R_{2}$ with respect to their projected dependencies.
+
+### 6.4 Relationships Among Normal Forms
+
+4NF implies BCNF, which in turn implies 3NF.
+
+![4NF implies BCNF implies 3NF](https://s2.loli.net/2022/08/10/CD5mgsFLl72nG6E.png)
+
+Another way to compare the normal forms is by the guarantees they
+make about the set of relations that result from a decomposition
+into that normal form.
+
+![Properties of normal forms and their decompositions](https://s2.loli.net/2022/08/10/yRcLbt4lo9j7JMa.png)
