@@ -84,7 +84,7 @@ The subscript used with the $\gamma$ operator is a list $L$ of elements, each of
 which is either:
 
 + An attribute of the relation $R$ to which the $\gamma$ is applied;
-this attribute is one of the attribute by which $R$ wille be grouped.
+this attribute is one of the attribute by which $R$ will be grouped.
 This element is said to be a *grouping attribute*.
 + An aggregation operator applied to an attribute of the relation.
 To provide a name for the attribute corresponding to this aggregation
@@ -217,3 +217,62 @@ applying one or more Datalog rules.
 An EDB predicate can never appear in the head of a rule, although
 it can appear in the body of a rule. IDB predicates can appear in either
 the head or the body of rules.
+
+## 4. Relational Algebra and Datalog
+
+### 4.1 Boolean Operations
+
+Let the schemas for the two relations be $R(A, B, C)$ and $S(A, B, C)$.
+
+For $R \cup S$, we use the two rules:
+
+$$
+\begin{align*}
+U(x, y, z) &\leftarrow R(x, y, z) \\
+U(x, y, z) &\leftarrow S(x, y, z)
+\end{align*}
+$$
+
+For $R \cap S$, we use the rule:
+
+$$
+I(x, y, z) \leftarrow R(x, y, z) \ \mathbf{AND} \ S(x, y, z)
+$$
+
+For $R - S$, we use the rule:
+
+$$
+D(x, y, z) \leftarrow R(x, y, z) \ \mathbf{AND NOT} \ S(x, y, z)
+$$
+
+### 4.2 Projection
+
+To compute a projection of a relation $R$, we use one rule with
+a single subgoal with predicate $R$. The arguments of this subgoal
+are distinct variables, one for each attribute of the relation. The head
+has an atom with arguments that are the variables corresponding to
+the attributes in the projection list, in the desired order.
+
+### 4.3 Selection
+
+Selections can be somewhat more difficult to express in Datalog. The simple
+case is when the selection condition is the AND of one or more
+arithmetic comparisons. In that case, we create a rule with:
+
+1. One relational subgoal for the relation upon which we are performing the
+selection. This atom has distinct variables for each component, one for
+each attribute of the relation.
+2. For each comparison in the selection condition, an arithmetic subgoal
+that is identical to this comparison.
+
+### 4.4 Product
+
+The product of two relations $R \times S$ can be expressed by
+a single Datalog rule. This rule has two subgoals, one for $R$
+and one for $S$. Each of these subgoals has distinct variables,
+one for each attribute of $R$ or $S$.
+
+### 4.5 Joins
+
+We can take the natural join of two relations by a Datalog rule
+that looks much like the rule for a product.
