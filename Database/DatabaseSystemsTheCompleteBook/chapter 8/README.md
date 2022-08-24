@@ -244,5 +244,3 @@ To calculate the new value of an index, we need to make assumptions about which
 queries and modifications are most likely to be performed on the database.
 Sometimes, we have a history of queries that we can use to get good information,
 on the assumption that the future will be like the past.
-
-## 5. Materialized Views
