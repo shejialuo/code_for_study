@@ -24,6 +24,27 @@ The `Reduce` function, also written by the user, accepts an intermediate
 key `I` and a set of values for that key. It merges together these values
 to form a possibly smaller set of values.
 
+### Example 1
+
+Consider the problem of counting the number of occurrences of each word in
+a large collection of documents. The user would write code similar to
+the following pseudo-code:
+
+```pseudocode
+map(String key, String value):
+  // key: document name
+  // value: document contents
+  for each word w in value:
+    EmitIntermediate(w, "1");
+reduce(String key, Iterator value):
+  // key: a word
+  // values: a list of counts
+  int result = 0;
+  for each v in values:
+    result += ParseInt(v);
+  Emit(AsString(result));
+```
+
 ### Types
 
 Conceptually the map and reduce functions supplied by the user
@@ -43,6 +64,8 @@ The input splits can be processed in parallel by different machines.
 space into $R$ pieces using a partitioning function.
 
 Below figure shows the overall flow of a MapReduce operation.
+
+![Execution Overview](https://s2.loli.net/2022/09/02/YTqVskOJoSHQzy7.png)
 
 1. The MapReduce library in the user program first splits the
 input files into $M$ pieces of typically 16MB to 64MB per piece.
@@ -79,7 +102,10 @@ task, it stores the state (*idle*, *in-progress*, or *completed*), and
 the identity of the worker machine.
 
 For each completed map task, the master stores the locations and sizes
-of the $R$ immediate file regions produced by the map task.
+of the $R$ immediate file regions produced by the map task. Updates to
+this location and size information are received as map tasks
+are completed. The information is pushed incrementally to workers
+that have *in-progress* reduce tasks.
 
 ### Fault Tolerance
 
@@ -103,3 +129,48 @@ worker $B$, all workers executing tasks are notified of the re-execution.
 It's easy to make the master write periodic checkpoints of the master
 data structures. If the master task dies, a new copy can be started
 from the last checkpoint state.
+
+### Task Granularity
+
+We subdivide the map phase into $M$ pieces and the reduce phase into
+$R$ pieces. Ideally, $M$ and $R$ should be much larger than the
+number of worker machines. Having each worker perform many different tasks
+improves dynamic *load balancing*, and also speeds up recovery when
+a worker fails.
+
+There are practical bounds on how large $M$ and $R$ can be in
+our implementation, since the master must take $O(M + R)$ scheduling
+decisions and keeps $O(M * R)$ state in memory.
+
+## Refinements
+
+### Partitioning Function
+
+The users of MapReduce specify the number of reduce tasks/output file
+that they desire $(R)$. Data gets partitioned across these tasks
+using a partitioning function on the intermediate key. A default
+partitioning function is provided that uses hashing.
+
+### Ordering Guarantees
+
+We guarantee that within a given partition, the intermediate
+key/value pairs are processed in increasing key order. This
+ordering guarantee makes it easy to generate a sorted output file
+format needs to support efficient random access lookups by key,
+or users of the output find it convenient to have the data sorted.
+
+### Combiner Function
+
+In some cases, there is significant repetition in the intermediate
+keys produced by each map task, and the user-specified *Reduce*
+function is commutative and associative. A good example of this
+is the word counting example. Each map task will produce hundreds of
+thousands of records of the form `<the, 1>`. All of these counts
+will be sent over the network to a single reduce task and then added
+together by the *Reduce* function to produce one number. We allow
+the user to specify an optional *Combiner* function that does
+partial merging of this data before it is sent over the network.
+
+The *Combiner* function is executed on each machine that performs
+a map task. Partial combining significantly speeds up certain classes
+of MapReduce operations.
