@@ -271,7 +271,7 @@ void scheduler(void) {
 
 `switch` function is defined in `switch.S` and it is super easy because
 of the simplicity of the RISC-V. However, you may be confused about the
-`c-proc = 0`. When we have finished the `switch` function, the
+`c->proc = 0`. When we have finished the `switch` function, the
 cpu is going to execute the process' code. So we must let the control
 come back to the scheduler when the time interrupt happens.
 Remember in `trap.c`, when the time interrupt happens, it calls `yield` to give
