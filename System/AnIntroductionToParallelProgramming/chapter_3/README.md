@@ -157,3 +157,281 @@ the first three pairs of arguments must specify compatible buffers.
 
 + If `recv_type=send_type` and `recv_buf_sz >= send_buf_sz`,
 the the message sent by $q$ can be successfully received by $r$.
+
+## 3.2 The trapezoidal rule in MPI
+
+Let's write a program that implements the trapezoidal rule for
+numerical integration.
+
+### 3.2.1 The trapezoidal rule
+
+We can use the trapezoidal rule to approximate the area between
+the graph a function, $y = f(x)$. It easy to calculate the area
+of the trapezoid.
+
+$$
+\frac{h}{2}[f(x_{i}) + f(x_{i + 1})]
+$$
+
+We can choose the $n$ subintervals so that they would all have the same
+length, we also know that if the vertical lines bounding the
+region are $x = a$ and $x = b$, then we have
+
+$$
+h = \frac{b - a}{n}
+$$
+
+Thus if we call the leftmost endpoint $x_{0}$, and the rightmost
+endpoint $x_{n}$ we have that
+
+$$
+x_{0} = a, x_{1} = a + h, x_{2} = a + 2h, \dots, x_{n - 1} = a + (n - 1)h, x_{n} = b.
+$$
+
+And the sum of trapezoid areas is
+
+$$
+h[f(x_{0}) /2 + f(x_{1}) + f(x_{2}) + \cdots + f(x_{n - 1} + f(x_{n}) / 2)]
+$$
+
+The pseudocode for a serial program might look something like this:
+
+```pseudocode
+/* Input: a , b, n */
+h = (b - a) / n;
+approx = (f(a) + f(b)) / 2.0;
+for (i = 1; i < n; ++i) {
+  x_i = a + i * h;
+  approx += f(x_i);
+}
+approx = h * approx;
+```
+
+### 3.2.2 Parallelizing the trapezoidal rule
+
+In the partitioning phase, we usually try to identify as many tasks
+as possible. For the trapezoidal rule, we might identify two types
+of tasks: one type is find the area of a single trapezoid, and
+the other is computing the sum of these areas.
+
+See [mpi_trapezoidal](./mpi_trapezoidal1.c)
+
+## 3.3 Dealing with I/O
+
+We need to address the problem of getting input from the user.
+
+### 3.3.1 Output
+
+In both the "greetings" program and the trapezoidal rule program,
+we've assumed that process 0 can write to `stdout`. Although the MPI
+standard doesn't specify which processes have access to which I/O
+devices, virtually all MPI implementations allow *all* the processes
+in `MPI_COMM_WORLD` full access to `stdout` and `stderr`.
+
+However, most MPI implementations don't provide any automatic scheduling
+of access to these devices.
+
+```c
+#include <stdio.h>
+#include <mpi.h>
+
+int main() {
+  int my_rank, comm_sz;
+
+  MPI_Init(NULL, NULL);
+  MPI_Comm_size(MPI_COMM_WORLD, &comm_sz);
+  MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+
+  printf("Proc %d of %d > Does anyone have a toothpick?\n", my_rank, comm_sz);
+  MPI_Finalize();
+}
+```
+
+### 3.3.2 Input
+
+Unlike output, most MPI implementations only allow process 0 in
+`MPI_COMM_WORLD` access to `stdin`.
+
+## 3.4 Collective communication
+
+If we pause for a moment and think about our trapezoidal rule program,
+we can find several things that we might be able to improve on.
+One of the most obvious is the "global sum" after each process
+has computed its part of the integral. Each process with rank
+greater than 0 is "telling process 0 what to do" and then quitting.
+Sometimes it does happen that this is the best we can do in a
+parallel program. But we could do better.
+
+### 3.4.1 Tree-structured communication
+
+We might use a binary tree structure, like below. In this diagram,
+initially processes 1, 3, 5, and 7 send their values to processes 0, 2, 4, and 6,
+respectively. Then processes 0, 2, 4, and 6 add the received values
+to the original values, and the process is repeated twice:
+
++ Process 2 and 6 send their new values to processes 0 and 4, respectively.
+Process 0 and 4 add the received values into their new values.
++ Process 4 sends its newest value to process 0. Process 0 adds
+the received value to its newest value.
+
+![A tree-structure global sum](https://s2.loli.net/2022/08/29/i8vSwcdCAVGRnZs.png)
+
+This is well and good, but coding this tree-structured global
+sum would take a quite a bit of work.
+
+### 3.4.2 MPI_Reduce
+
+With virtually limitless possibilities, it's unreasonable to
+expect each MPI programmer to write an optimal global-sum function, so MPI
+specifically protects programmers against this trap of endless optimization
+by requiring that MPI implementations include implementations of
+global sums.
+
+Now a "global-sum function" will obviously require communication. However,
+unlike the `MPI_Send` and `MPI_Recv` pair, the global-sum function may
+involve more than two processes. In MPI parlance, communication
+functions that involve all the processes in a communicator are
+called *collective communications*. `MPI_Send` and `MPI_Recv` are
+often called *point-to-point* communications.
+
+In fact, global-sum is just a special case of an entire class
+of collective communications. MPI generalized the global-sum function
+with `MPI_Reduce`
+
+```c
+int MPI_Reduce(
+  void* input_data_p,
+  void* output_data_p,
+  int count,
+  MPI_Datatype datatype,
+  MPI_Op operator,
+  int dest_process,
+  MPI_Comm comm
+);
+```
+
+### 3.4.3 Collective vs. point-to-point communications
+
+It's important to remember that collective communications differ in
+several ways from point-to-point communications.
+
+1. *All* the processes in the communicator must call the same collective function.
+2. The arguments passed by each process to an MPI collective communication
+must be "compatible".
+3. The `output_data_p` argument is only used on `dest_process`.
+4. Point-to-point communications are matched on the basis of tags
+and communicators. Collective communications don't use tags.
+
+### 3.4.4 MPI_Allreduce
+
+Sometimes all of the processes need the result of a global sum
+to complete some larger computation.
+
+```c
+int MPI_Allreduce(
+  void* input_data_p,
+  void* output_data_p,
+  int count,
+  MPI_Datatype datatype,
+  MPI_Op operator,
+  MPI_Comm comm
+);
+```
+
+### 3.4.5 Broadcast
+
+If we can improve the performance of the global sum in our trapezoidal
+rule program by replacing a loop of receives on process 0 with
+a tree structured communication, we ought to be able to do something
+similar with the distribution of the input data. In fact, if
+we simply "reverse" the operation, we obtain the tree-structured
+communication shown below and we can use this structure to distribute
+the input data. A collective communication in which data belonging
+to a single process is sent to all of the processes in the communicator
+is called a *broadcast*.
+
+![A tree-structure broadcast](https://s2.loli.net/2022/09/07/MczviLTZqoKpJUt.png)
+
+```c
+int MPI_Bcast(
+  void* data_p,
+  int count,
+  MPI_Datatype datatype,
+  int source_proc,
+  MPI_Comm comm
+);
+```
+
+### 3.4.6 Data distributions
+
+Suppose we want to write a function that computes a vector sum:
+
+$$
+\begin{align*}
+\mathbf{x} + \mathbf{y} &= (x_{0}, x_{1}, \dots, x_{n} - 1) + (y_{0}, y_{1}, \dots, y_{n - 1}) \\
+&= (x_{0} + y_{0}, x_{1} + y_{1}, \dots, x_{n - 1 + y_{n - 1}}) \\
+&= (z_{0}, z_{1}, \dots, z_{n - 1}) \\
+&= \mathbf{z}
+\end{align*}
+$$
+
+We might specify that the tasks are just the additions of corresponding
+components. Then there is no communication between the tasks,
+and the problem of parallelizing vector addition boils down to
+aggregating the tasks and assigning them to the cores. This is
+often called a *block partition* of the vector.
+
+An alternative to a block partition is a *cyclic partition*. In a
+cyclic partition, we assign the components in a round-robin fashion.
+
+A third alternative is a *block-cyclic partition*. The idea here
+is that instead of using a cyclic distribution of individual
+components, we use a cyclic distribution of *blocks* of components.
+
+### 3.4.7 Scatter
+
+Now suppose we want to test our vector addition function. It would
+be convenient to be able to read the dimension of the vectors and then
+read in the vectors $\mathbf{x}$ and $\mathbf{y}$. We already know
+how to read in the dimension of the vectors: process 0 can prompt
+the user, read in the value, and broadcast the value to the other
+processes. However, this could be very wasteful.
+
+We might try writing a function that reads in an entire vector
+on process 0, but sends the needed components to each of the other
+processes. For the communication MPI provides just such a function:
+
+```c
+int MPI_Scatter(
+  void* send_buf_p,
+  int send_count,
+  MPI_Datatype send_type,
+  void *recv_buf_p,
+  int recv_count,
+  MPI_Datatype recv_type,
+  int src_proc,
+  MPI_Comm comm
+);
+```
+
+### 3.4.8 Gather
+
+Of course, out test program will be useless unless we can see the
+result of our vector addition. So we need to write a function for
+printing out a distributed vector. Our function can collect all
+of the components of the vector onto process 0, and the process 0
+can print all of the components. The communication in this function
+can be carried out by `MPI_Gather`:
+
+```c
+int MPI_Gather(
+  void* send_buf_p,
+  int send_count,
+  MPI_Datatype send_type,
+  void* recv_buf_p,
+  int recv_count,
+  MPI_Datatype recv_type,
+  int desc_proc,
+  MPI_Comm comm
+);
+```
