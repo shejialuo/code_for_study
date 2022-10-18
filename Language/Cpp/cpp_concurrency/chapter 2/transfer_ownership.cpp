@@ -10,7 +10,7 @@ using namespace std;
 
 /*
   * In the previous example, we use reference to
-  * point to the out-scoped thread, it's a bad iead.
+  * point to the out-scoped thread, it's a bad idea.
   * We should use move semantics.
 */
 

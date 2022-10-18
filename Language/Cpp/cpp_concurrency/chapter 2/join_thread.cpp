@@ -39,7 +39,7 @@ void joinThreadBadIdea() {
   Functor func(localState);
   thread threadFunctor(func);
   try {
-    cout << "This is a bad idea to use try-catch\n"; 
+    cout << "This is a bad idea to use try-catch\n";
   }
   catch(...) {
     threadFunctor.join();

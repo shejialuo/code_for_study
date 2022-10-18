@@ -21,7 +21,7 @@ int main() {
   thread threadByFunction(threadFunc);
   /*
     thread threadByFunctor(ThreadClass(5));
-    will cause most vexing parsing. 
+    will cause most vexing parsing.
   */
   thread threadByFunctor{ThreadClass(5)};
   thread threadByLambda([](){
