@@ -18,6 +18,7 @@ int main() {
   tuple<int, float> t(1, 2.22);
 
   pair<int, Foo> p1(42, t);
+  pair<int, Foo> p2(std::piecewise_construct, make_tuple(42), t);
 
   std::pair<int, float> pair1 = std::pair<int, float>(42, 7.77);
   std::pair<int, float> pair2 = std::make_pair(42, 7.77);
