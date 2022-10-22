@@ -192,12 +192,107 @@ rvalues. They correspond to lvalue references if they're initialized with lvalue
 
 ## Item 25
 
+In short, rvalue references should be *unconditionally cast* to rvalues when forwarding
+them to other functions, because they're always bound to rvalues, and universal references
+should be *conditionally cast* to rvalues when forwarding them, because they're only
+*sometimes* bound to rvalues.
+
+The idea of using `std::move` with universal references, because that can have the effect
+of unexpectedly modifying lvalues.
+
+```c++
+class Widget {
+public:
+  template<typename T>
+  void setName(T&& newName) {name = std::move(newName);}
+private:
+  std::string name;
+  std::shared_ptr<SomeDataStructure> p;
+
+std::string getWidgetName();
+
+Widget w;
+
+auto n = getWidgetName();
+
+w.setName(n); // n's value now unknown
+}
+```
+
+If you're in a function that returns *by value*, and you're retuning an object bound to
+an rvalue reference or a universal reference, you'll want to apply `std::move` or
+`std::forward` when you return the reference.
+
+```c++
+Matrix operator+(Matrix&& lhs, const Matrix& rhs) {
+  lhs += rhs;
+  return std::move(lhs);
+}
+```
+
+If `Matrix` does not support moving, casting it to an rvalue won't hurt, because the rvalue
+will simply be copied by `Matrix`'s copy constructor.
+
 + Apply `std::move` to rvalue references and `std::forward` to universal references
 the last time each is used.
 + Do the same thing for rvalue references and universal references being returned
 from functions that return by value.
 + Never apply `std::move` or `std::forward` to local objects if they would otherwise
 be eligible for the return value optimization.
+
+## Item 26
+
+Suppose you need to write a function that takes a name as a parameter, logs the current date
+and time, then adds the name to the global data structure.
+
+```c++
+std::multiset<std::string> names;
+
+void logAndAdd(const std::string& name) {
+  auto now = std::chrono::system_clock::now();
+
+  log(now, "logAndAdd");
+
+  names.emplace(name);
+}
+```
+
+This isn't unreasonable code, but it's not as efficient as it could be.
+
+```c++
+std::string petName("Darla");
+
+logAndAdd(petName); // pass lvalue std::string
+logAndAdd(std::string("Persephone")); // pass rvalue std::string
+logAndAdd("Patty Dog"); // pass string literal
+```
+
+In the first call, `logAndAdd`'s parameter `name` is bound to the variable `petName`.
+Within `logAndAdd`, `name` is ultimately passed to `names.emplace`. Because `name`
+is an lvalue, it is copied into `names`. There's no way to avoid that copy.
+
+In the second call, the parameter `name` is bound to an rvalue. `name` itself is an
+lvalue. so it's copied into `names`, but we recognize its value could be moved into `names`.
+
+In the third call, the parameter `name` is again bound to an rvalue, but this time it's to
+a temporary `std::string` that's implicitly created from `Patty Dog`.
+
+We can eliminate the inefficiencies in the second and third calls by rewriting `logAndAdd`
+to take a universal reference.
+
+```c++
+template<typename T>
+void logAndAdd(T&& name) {
+  auto now = std::chrono::system_clock::now();
+  log(now, "logAndAdd");
+  names.emplace(std::forward<T>(name));
+}
+```
+
+## Item 27
+
++ Universal reference parameters often have efficiency advantages, but they typically
+have usability disadvantages.
 
 ## Item 28
 
