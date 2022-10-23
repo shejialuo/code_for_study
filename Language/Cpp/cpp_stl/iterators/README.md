@@ -91,7 +91,7 @@ Bidirectional Iterators are forward iterators that provide the additional abilit
 to iterate backward over the elements. Thus, they provide the decrement operator
 to step backward.
 
-| Experssion |                 Effect                |
+| Expression |                 Effect                |
 |:----------:|:-------------------------------------:|
 |   --iter   | Steps backward (returns new position) |
 |   iter--   | Steps backward (returns old position) |
@@ -148,3 +148,78 @@ process elements in reverse order.
 returns the position of the last element.
 + `rend()` returns the position after the last element of a reverse iteration. Thus, it returns
 the position *before* the first element.
+
+You can convert normal iterators into reverse iterators. Naturally, the iterators must be
+bidirectional iterators, but note the logical position of an iterator is moved during
+the conversion.
+
+[reverseIterator2.cpp](./reverseIterator2.cpp)
+
+If you print the value of an iterator and convert the iterator into a reverse iterator, the
+value has changed. This is not a bug; it's a feature! This behavior is a consequence of the
+fact that ranges are half open.
+
+You can convert reverse iterators back into normal iterators using `base()`.
+
+### Insert Iterators
+
+An insert iterator transforms an assignment into an insertion. However, two operations
+are involved: operator `*` returns the current element of the iterator; second, operator `=`
+assigns a new value. Implementations of insert iterators usually use the following
+two-trick:
+
++ Operator `*` is implemented as a no-op that simple returns `*this`.
++ The insert iterator calls the `push_back()`, `push_front()` or `insert()` member function
+of the container.
+
+|  Expression  |        Effect       |
+|:------------:|:-------------------:|
+|     *iter    | No-op(returns iter) |
+| iter = value |     Insert value    |
+|    ++iter    | No-op(returns iter) |
+|    iter++    | No-op(returns iter) |
+
+The C++ standard library provides three kinds of insert iterator: back inserters, front
+inserters, and general inserters.
+
+|       Name       |          Class         |  Called Function  |       Creation       |
+|:----------------:|:----------------------:|:-----------------:|:--------------------:|
+|   Back inserter  | back_inserter_iterator |  push_back(value) |  back_inserter(coll) |
+|  Front inserter  |  front_insert_iterator | push_front(value) | front_inserter(coll) |
+| General inserter |     insert_iterator    | insert(pos,value) |  inserter(cont,pos)  |
+
+### Stream Iterators
+
+A *stream iterator* is an iterator adapter that allows you to use a stream as a source or
+destination of algorithms.
+
+*Ostream iterators* write assigned value to an output stream. By using ostream iterators,
+algorithms can write directly to streams. The implementation of an ostream iterator uses
+the same concept as the implementation of insert iterators. The only difference is
+that they transform the assignment of a new value into an output operation by using
+operator `<<`.
+
+|              Expression              |                       Effect                       |
+|:------------------------------------:|:--------------------------------------------------:|
+|     ostream_iterator<T>(ostream)     |       Creates an ostream iterator for ostream      |
+| ostream_iterator <T>(ostream, delim) | Creates an ostream iterator for ostream with delim |
+|                 *iter                |                No-op (returns iter)                |
+|             iter = value             |          Writes value using ostream<<value         |
+|                ++iter                |                No-op (returns iter)                |
+|                iter++                |                No-op (returns iter)                |
+
+*Istream Iterators* are the counterparts of ostream iterators. An istream iterator reads elements
+from an input stream.
+
+### Move Iterators
+
+Since C++11, an iterator adapter is provided that converts any access to the underlying
+element into a move operation.
+
+```c++
+ move operation. For example:
+std::list<std::string> s;
+...
+std::vector<string> v1(s.begin(), s.end());
+std::vector<string> v2(make_move_iterator(s.begin()),make_move_iterator(s.end()));
+```
