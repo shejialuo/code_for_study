@@ -1,33 +1,23 @@
 #include <utility>
 #include <iostream>
 
-class X{
-
-};
+class X {};
 
 void g(X&) {
   std::cout << "g() for variable\n";
 }
 
-void g(const X&) {
+void g(X const&) {
   std::cout << "g() for constant\n";
 }
 
 void g(X&&) {
-  std::cout <<"g() for moveable object\n";
+  std::cout << "g() for moveable object\n";
 }
 
-void f(X& val) {
-  g(val);
-}
-
-void f(X const& val) {
-  g(val);
-}
-
-
-void f(X&& val) {
-  g(std::move(val));
+template<typename T>
+void f(T&& val) {
+  g(std::forward<T>(val));
 }
 
 int main() {
