@@ -143,3 +143,48 @@ endless.
 Many implementations prevent this infinite wait in the FIN_WAIT_2 state as follows:
 A timer would be set. If the connection is idle when the timer expires. TCP moves
 the connection into the CLOSED state.
+
+## 13.4 Reset Segments
+
+For a reset segment to be accepted by a TCP, the ACK bit field must be set and
+the ACK Number field must be within the valid window.
+
+### 13.4.1 Aborting a Connection
+
++ *Orderly release*: terminate a connection normally.
++ *Abortive release*: abort a connection by sending a reset.
+
+Aborting a connection provides two features to the application:
+
+1. any queued data is thrown away and a reset segment is sent immediately.
+2. the receiver of the reset can tell that the other end did an abort.
+
+The sockets API provides this capability by using the "linger on close"
+socket option (SO_LINGER) with a 0 linger value.
+
+### 13.4.2 Half-Open Connections
+
+A TCP connection is said to be *half-open* if one end has closed or aborted
+the connection without the knowledge of the other end. This can happen anytime
+one of the peers crashes.
+
+Another common cause of a half-open connection is when one host is powered
+off instead of shut down properly. This happens, when PCs are being used to
+run remote login clients and are switched off at the end of the day. If there
+was no data transfer going on when the power was cut, the server will *never*
+know the client disappeared. When the user comes in the next morning, powers
+on the PC, and starts a new session, a new occurrence of the server is started
+on the server host. This can lead to many half-open TCP connections on the
+server host.
+
+### 13.4.3 TIME-WAIT Assassination
+
+When client remains in the TIME_WAIT state, when client receives old
+segments from server, it determines that both the sequence number
+and ACK values are "old". When receiving such old segments, TCP
+responds by sending an ACK with the most current sequence number
+and ACK values. However, when the server receives this segment, it
+has no information whatsoever about the connection and therefore
+replies with an RST segment. It would cause the client to prematurely
+transition from TIME_WAIT to CLOSED. Most systems avoid this problem
+by simply not reacting to reset segments while in the TIME_WAIT state.
