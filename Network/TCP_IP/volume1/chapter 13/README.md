@@ -121,3 +121,25 @@ However, even with this bypass mechanism for one socket, the rules of TCP still
 prevent this port number from being reused by another instantiation of the same
 connection that is in the 2MSL wait state. Any delayed segments that arrive for
 a connection while it is in the 2MSL wait state are discarded.
+
+### 13.3.3 Quiet Time Concept
+
+The 2MSL provides protection against delayed segments from an earlier instantiation
+of a connection being interpreted. But this works only if a host with connections
+in the 2MSL wait does not crash.
+
+When a host crashed, the 2MSL can't provide such protection. So TCP should wait an
+amount of time equal to the MSL before creating any new connections after a reboot
+or crash. This is called the *quiet time*. Few implementations abide by this because
+most hosts take longer than the MSL to reboot after a crash.
+
+### 13.3.4 FIN_WAIT_2 State
+
+In the FIN_WAIT_2 state, the TCP must wait for the application on the other end
+to recognize that it has received an end-of-file notification and close its
+end of the connection, which causes a FIN to be sent. However, this might be
+endless.
+
+Many implementations prevent this infinite wait in the FIN_WAIT_2 state as follows:
+A timer would be set. If the connection is idle when the timer expires. TCP moves
+the connection into the CLOSED state.
