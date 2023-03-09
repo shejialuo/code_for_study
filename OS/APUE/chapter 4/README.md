@@ -75,6 +75,18 @@ Every process has six or more IDs associated with it.
   Normally, the effective user ID equals the real user ID ,and the effective group
   ID equals the real group ID.
 
+Every file has an owner and a group owner. The owner is specified by the `st_uid`
+member of the `stat` structure; the group owner, by the `st_gid` member.
+
+When we execute a program file, the effective user ID of the process is usually
+the real user ID, and the effective group ID is usually the real group ID. However,
+we can also set a special flag in the file's mode word (`st_mode`) that says,
+"When this file is executed, set the effective user ID of the process to be the owner
+of the file (`st_uid`)". Similarly, we can set another bit in the file's mode word
+that causes the effective group ID to be the group owner of the file (`st_gid`).
+These two bits in the file's mode word are called the *set-user-Id* bit and the
+*set-group-ID* bit.
+
 ## File Access Permissions
 
 The `st_mode` value also encodes the access permission bits for the file.
@@ -83,7 +95,8 @@ We’ll summarize them here:
 
 + The first rule is that *whenever* we want to open any type of file by name,
   we must have execute permission in each directory mentioned in the name,
-  including the current directory.
+  including the current directory. For example, to open the file `/usr/include/stdio.h`,
+  we need execute permission in the `/`, `/usr/`, `/user/include`.
 + The read permission for a file determines whether we can open an existing file
   for reading: the `O_RDONLY` and `O_RDWR` flags for the `open` function.
 + The write permission for a file determines whether we can open an existing

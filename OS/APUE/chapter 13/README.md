@@ -23,7 +23,7 @@ Most of the user-level daemons are process group leaders and session leaders, an
 are the only processes in their process group and session. Finally, note that
 the parent of the user-level daemons is the `init` process.
 
-## 13.3 Coding rules
+## Coding rules
 
 Some basic rules to coding a daemon prevent unwanted interactions from happening.
 
@@ -38,7 +38,7 @@ Some basic rules to coding a daemon prevent unwanted interactions from happening
 + Changing the current working directory to the root directory.
 + Unneeded file descriptors should be closed.
 
-### 13.4 Error Logging
+## Error Logging
 
 One problem a daemon has is how to handle error messages. It can't simply write
 to standard error,

@@ -83,15 +83,25 @@ Each process group can have a process group leader. The leader is identified by
 its process group ID being equal to its process ID.
 
 It is possible for a process group leader to create a process group, create
-processes in the group, and then terminate.
+processes in the group, and then terminate. The process group still exists, as
+long as at least one process in the group, regardless of whether the group
+leader terminates. This is called the process group lifetime.
 
 A process joins an existing process group or creates a new process group by
-calling `setpgig`
+calling `setpgid`.
 
 ```c
 #include <unistd.h>
 int setpgid(pid_t pid, pid_t pgid);
 ```
+
+A process can set the process group ID of only itself or any of its children.
+Furthermore, it can't change the process group ID of one of its children after
+that child has called one of the `exec` functions.
+
+In most job-control shells, this function is called after a `fork` to have
+the parent set the process group ID of the child, and to have the child set
+its own process group ID.
 
 ## Sessions
 

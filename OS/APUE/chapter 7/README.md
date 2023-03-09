@@ -272,3 +272,20 @@ int getrlimit(int resource, struct rlimit *rlptr);
 int setrlimit(int resource, const struct rlimit *rlptr);
 // Both return: 0 if OK, -1 on error
 ```
+
+Each call to these two functions specifies a single *resource* and a pointer
+to the following structure:
+
+```c
+struct rlimit {
+  rlim_t rlim_cur; // soft limit: current limit.
+  rlim_t rlim_max; // hard limit: maximum value for rlim_cur.
+}
+```
+
+Three rules govern the changing of the resource limits:
+
+1. A process can change its soft limit to a value less than or equal to its hard limit.
+2. A process can lower its hard limit to a value greater than or equal to its soft limit.
+This lowering of the hard limit is irreversible for normal users.
+3. Only a superuser process can raise a hard limit.
