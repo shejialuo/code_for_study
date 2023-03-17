@@ -230,4 +230,88 @@ contents are subminimum.
 
 ## 3. Hash Tables
 
-It's common. Omit detail here.
+There are a number of data structures involving a hash table that are useful
+as indexes. In such a structure there is a *hash function* $h$ that takes a
+search key as an argument and computes from it an integer in the range $0$ to
+$N - 1$, where $B$ is the number of *buckets*. A *bucket array*, which is
+an array indexed from $0$ to $B - 1$, holds the headers of $B$ linked lists,
+one for each bucket of the array.
+
+### 3.1 Secondary-Storage Hash Tables
+
+A hash table that holds a very large number of records, so many that they must
+be kept mainly in secondary storage, differs from the main-memory version in
+small but important ways.
+
++ The bucket array consists of blocks.
++ If a bucket has too many records, a chain of overflow blocks can be added to
+the bucket to hold many records.
+
+### 3.2 Insertion Into a Hash Table
+
+When a new record with search key $K$ must be inserted, we compute $h(K)$. If
+the bucket numbered $h(K)$ has space, then we insert the record into the block
+for this bucket, or into one of the overflow blocks on its chain if there is
+no room in the first block.
+
+### 3.4 Hash-Table Deletion
+
+Just like insertion.
+
+### 3.4 Efficiency of Hash Table Indexes
+
+Ideally, there are enough buckets that most of them fit on one block. If so,
+then the typical lookup takes only one disk I/O, and insertion or deletion from
+the file takes only two disk I/O's.
+
+However, if the file grows, then we shall eventually reach a situation where
+there are many blocks in teh chain for a typical bucket. If so, we need to
+search long lists of blocks, taking at least one disk I/O per block.
+
+The hash tables we have examined so far are called *static hash tables*, because
+$B$, the number of buckets, never changes. However, there are several kinds of
+*dynamic hash tables*, where $B$ is allowed to vary so it approximates the
+number of records divided by the number of records that can fit on a block.
+
++ Extensible hashing.
++ Linear hashing.
+
+### 3.5 Extensible Hash Tables
+
+Our first approach to dynamic hashing is called *extensible hash tables*. The major
+additions to the simpler static hash table structure are:
+
+1. There is a level of indirection for the buckets. That is, an array of pointers to
+blocks represents the buckets.
+2. The array of pointers can grow. Its length is always a power of 2.
+3. However, there does not have to be a data block for each bucket; certain buckets
+can share a block.
+4. The hash function $h$ computes for each key a sequence of $k$ bits for some large $k$.
+However, the bucket numbers will at all times use some smaller number of bits, say
+$i$ bits. The bucket array will have $2^{i}$ entries when $i$ is the number of bits used.
+
+### 3.6 Insertion Into Extensible Hash Tables
+
+Insertion into an extensible hash table begins like insertion into a static hash
+table. To insert a record with search key $K$, we compute $h(K)$m take the first $i$
+bits of this bit sequence, and go to the entry of the bucket array indexed by these
+$i$ bits.
+
+We follow the pointer in this entry of the bucket array and arrive at a block $B$. If
+there is no room, then there are two possibilities, depending on the number of $j$,
+which indicates how many bits of the hash value are used to determine membership in
+block $B$.
+
+1. If $j < i$, the nothing needs to be done to the bucket array.
+    1. Split block $B$ into the two.
+    2. Distribute records in $B$ to the two blocks, based on the value of their $(j+1)$st
+    bits.
+    3. Put $j + 1$ in each block's nud to indicate the number of bits used to determine
+    membership.
+    4. Adjust the pointers in the bucket array so entries that formerly pointed to $B$
+    now point either to $B$ or the new block, depending on their $(j+1)$st bit.
+2. If $j = i$, then we must first increment $i$ by 1. We double the length of the bucket
+array, so it now has $2^{i + 1}$ entries. Suppose $w$ is a sequence of $i$ bits indexing
+one of the entries in the previous bucket array. In the new bucket array, the entries
+indexed by both $w0$ and $w1$ each point to the same block that the $w$ entry used to
+point to.
