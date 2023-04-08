@@ -155,3 +155,169 @@ class WidgetManager : public CreationPolicy<Widget> {
   }
 };
 ```
+
+Using policies gives great flexibility to `WidgetManager`. First, you can change
+policies *from the outside* as easily as changing a template argument when you
+instantiate `WidgetManager`. Second, you can provide your own policies that are
+specific to your concrete application. You can use `new`, `malloc`, prototypes,
+or a peculiar memory application library that only your system uses.
+
+To ease the lives of application developers, `WidgetManager`'s author might define
+a battery of often-used policies, in addition, provide a default template argument
+for the policy that's most commonly used:
+
+```c++
+template <template <typename> class CreationPolicy = OpNewCreator>
+class WidgetManager {};
+```
+
+### 1.5.2 Implementing Policy Classes with Template Member Functions
+
+An alternative to using template template parameters is to use template member
+functions in conjunction with simple classes.
+
+For example, we can redefine the `Creator` policy to prescribe a regular class
+that exposes a template function `Create<T>`.
+
+```c++
+struct OpNewCreator {
+  template <typename T>
+  static T *Create() {
+    return new T;
+  }
+}
+```
+
+## 1.6 Enriched Policies
+
+The `Creator` policy prescribes only one member function, `Create`. However,
+`PrototypeCreator` defines two more functions: `GetPrototype` and `SetPrototype`.
+
+A user who uses a prototype-based `Creator` policy class can write the following code:
+
+```c++
+using MyWidgetManager = WidgetManager<PrototypeCreator>;
+
+Widget* pPrototype = ...;
+MyWidgetManager mgr;
+mgr.SetPrototype(pPrototype);
+```
+
+## 1.7 Destructors of Policy Classes
+
+Define a virtual destructor for a policy works against its static nature and
+hurts performance. Many policies don't have any data members, but rather are
+purely behavioral by nature. The first virtual function added incurs some size
+overhead for the objects of that class, so the virtual destructor should be
+avoided.
+
+The lightweight, effective solution that policies should use is to define a
+non-virtual protected destructor:
+
+```c++
+template <class T>
+struct OpNewCreator {
+  static T* Create() {
+    return new T;
+  }
+protected:
+  ~OpNewCreator() {}
+};
+```
+
+Because the destructor is protected, only derived classes can destroy policy
+objects, so it's impossible for outsiders to apply `delete` to a pointer to
+a policy class.
+
+## 1.8 Optional Functionality Through Incomplete Instantiation
+
+In conjunction with policy classes, incomplete instantiation brings remarkable freedom
+to you as a library designer. You can implement lean host classes that are able to use
+additional features and degrade graciously.
+
+## 1.9 Combining Policy Classes
+
+The greatest usefulness of policies is apparent when you combine them. Typically,
+a highly configurable class uses several policies for various aspects of its workings.
+Then the library user selects the desired high-level behavior by combining several
+policy classes.
+
+For example, consider designing a generic smart pointer class. Say you identify two
+design choices that you should establish with policies: threading model and
+checking before dereferencing. Then you implement a `SmartPtr` class template that
+use two polices, as shown:
+
+```c++
+template
+<
+  typename T,
+  template <typename> class CheckingPolicy,
+  template <typename> class ThreadingModel
+>
+class SmartPtr;
+```
+
+The two polices can defined as follows:
+
+1. `Checking`: The `CheckingPolicy<T>` class template must expose a `Check` member
+function, callable with an lvalue of type `T*`
+2. `ThreadingModel`: The `ThreadingModel<T>` class template must expose an inner
+type called `Lock`, whose constructor accepts a `T&`.
+
+```c++
+template <typename T>
+struct NoChecking {
+  static void Check(T *) {}
+};
+template <typename T>
+struct EnforceNotNull {
+  class NullPointerException : public std::exception {};
+  static void Check(T *ptr) {
+    if (!ptr) {
+      throw NullPointerException();
+    }
+  }
+};
+```
+
+`SmartPtr` uses the `Checking` policy this way:
+
+```c++
+template
+<
+  typename T,
+  template <typename> class CheckingPolicy,
+  template <typename> class ThreadingModel
+>
+class SmartPtr: public CheckingPolicy<T>, public ThreadingModel<T> {
+  T* operator->() {
+    typename ThreadingModel<SmartPtr>::Lock guard(*this);
+    CheckingPolicy<T>::Check(pointee_);
+    return pointee_;
+  }
+private:
+  T *pointee_;
+};
+```
+
+## 1.10 Customizing Structure with Policy Classes
+
+Suppose that you want to support nonpointer representations for `SmartPtr`.
+To solve this you might "indirect" the pointer access through a policy, say,
+a `Structure` policy. The `Structure` policy abstracts the pointer storage.
+
+```c++
+template <typename T>
+class DefaultSmartPtrStorage {
+public:
+  using PointerType = T*;
+  using ReferenceType = T&;
+protected:
+  PointerType GetPointer() { return ptr_; }
+  oid SetPointer(PointerType ptr) {
+    ptr_ = ptr;
+  }
+private:
+  PointerType ptr_;
+};
+```
