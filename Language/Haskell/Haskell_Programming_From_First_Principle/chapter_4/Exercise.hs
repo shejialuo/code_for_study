@@ -33,3 +33,24 @@ myAbs x = if x < 0 then -x else x
 f :: (a, b) -> (c, d) -> ((b, d), (a, c))
 f pair1 pair2 = ((snd pair1, snd pair2), (fst pair1, fst pair2))
 
+-- Correcting syntax
+
+-- 1.
+x = (+)
+f_ xs = w `x` 1
+  where w = length xs
+
+-- 2.
+id_ = \x -> x
+
+-- 3.
+
+f__ (a, b) = a
+
+
+-- Match the function names to their types
+
+-- 1. c)
+-- 2. b)
+-- 3. a)
+-- 4. d)
