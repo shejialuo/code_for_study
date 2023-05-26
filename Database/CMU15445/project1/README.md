@@ -31,3 +31,28 @@ array. Suppose $w$ is a sequence of `i` bits indexing one of the entries in the 
 bucket array. In the new bucket array, the entries index by `0w` and `1w` each point
 to the same block that the `w` entry used to point to. That is, the two new entries
 share the block, and the block itself does not change. And go back to 1.
+
+## LRU-K
+
+Well, it is important to understand how to implement a LRU-1 first. We could easily do
+this to use two data structures:
+
++ `list<T> items`
++ `unordered_map<T, typename <list<T>>::iterator> tables`
+
+When we insert a new value, if it is in the `tables`. We should move it to the head of
+the list and update the tables.
+
+It is just the same. And we could use the following structures:
+
++ `list<T> items_infinity`
++ `unordered_map<T, typename <list<T>>::iterator> tables_infinity`
++ `list<T> items_ready`
++ `unordered_map<T, typename <list<T>>::iterator> tables_ready`
+
+When the access time is less than the `k`, we put the itm in `items_infinity` and
+everything else is the same as LRU. If one of item in the `items_infinity` access
+time exceeds the `k`, we move it to the head of the `tables_ready`.
+
+When we want to get a page, we could easily first finds in the `items_infinity` and
+secondly find in the `items_ready`. What a good abstraction.
